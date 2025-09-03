@@ -1,16 +1,153 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <title>My Portfolio</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ben Shamloufard - CS180 Portfolio</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body,
+        html {
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        /* Video Background */
+        #video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            object-fit: cover;
+            pointer-events: none;
+            user-select: none;
+        }
+
+
+
+        /* Content Overlay */
+        .content {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .intro {
+            max-width: 800px;
+            margin-bottom: 3rem;
+        }
+
+        .intro h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            font-family: 'Georgia', serif;
+        }
+
+        .intro p {
+            font-size: 1.4rem;
+            line-height: 1.6;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            margin-bottom: 1rem;
+        }
+
+        .projects {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .project-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            text-decoration: none;
+            color: white;
+            transition: transform 0.3s ease, background 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .project-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .project-card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: #fff;
+        }
+
+        .project-card p {
+            font-size: 1.1rem;
+            line-height: 1.5;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .intro h1 {
+                font-size: 2.5rem;
+            }
+
+            .intro p {
+                font-size: 1.2rem;
+            }
+
+            .content {
+                padding: 1rem;
+            }
         }
     </style>
 </head>
+
 <body>
-    <h1>Welcome to My CS180 Portfolio!</h1>
-    <a href="./1/index.html">Project 1</a>
+    <video id="video-background" autoplay muted loop>
+        <source src="fixedTranquil.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <div class="content">
+        <div class="intro">
+            <h1>Ben Shamloufard</h1>
+            <p>I'm interested in computer vision!</p>
+            <p>Welcome to my CS180 Portfolio - exploring the fascinating world of computational photography and visual
+                perception.</p>
+        </div>
+
+        <div class="projects">
+            <a href="./0/index.html" class="project-card">
+                <h3>Project 0: Camera Perspective</h3>
+                <p>Exploring how camera distance and focal length affect perspective distortion, featuring selfie
+                    comparisons, architectural compression, and the classic dolly zoom effect.</p>
+            </a>
+
+            <a href="./1/index.html" class="project-card">
+                <h3>Project 1</h3>
+                <p>Coming soon...</p>
+            </a>
+        </div>
+    </div>
+
+
 </body>
+
 </html>

@@ -1,1 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project 0: Camera Perspective - Ben Shamloufard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body,
+        html {
+            height: 100%;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* Video Background */
+        #video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            object-fit: cover;
+            pointer-events: none;
+            user-select: none;
+        }
+
+
+
+        /* Content Overlay */
+        .content {
+            position: relative;
+            z-index: 1;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+            font-size: 1.1rem;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav a:hover {
+            opacity: 0.7;
+        }
+
+        /* Header */
+        .header {
+            padding: 8rem 2rem 4rem;
+            text-align: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            font-family: 'Georgia', serif;
+        }
+
+        .header .subtitle {
+            font-size: 1.4rem;
+            opacity: 0.9;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            margin-bottom: 2rem;
+        }
+
+        .header .intro {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Sections */
+        .section {
+            padding: 4rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            color: #fff;
+        }
+
+        .section-content {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 3rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 3rem;
+        }
+
+        .explanation {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            margin-bottom: 2rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .explanation strong {
+            color: #ffd700;
+        }
+
+        /* Image Comparison */
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .image-container {
+            text-align: center;
+        }
+
+        .image-container img {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+        }
+
+        .image-container img:hover {
+            transform: scale(1.05);
+        }
+
+        .image-caption {
+            margin-top: 1rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Video Container */
+        .video-container {
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .video-container video,
+        .video-container img {
+            width: 100%;
+            max-width: 600px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .video-caption {
+            margin-top: 1rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5rem;
+            }
+
+            .header .subtitle {
+                font-size: 1.2rem;
+            }
+
+            .header .intro {
+                font-size: 1.1rem;
+            }
+
+            .section h2 {
+                font-size: 2rem;
+            }
+
+            .comparison {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .section-content {
+                padding: 2rem;
+            }
+
+            .nav {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <video id="video-background" autoplay muted loop>
+        <source src="../fixedTranquil.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <div class="content">
+        <nav class="nav">
+            <a href="../index.html">← Back to Portfolio</a>
+        </nav>
+
+        <header class="header">
+            <h1>Project 0: Camera Perspective</h1>
+            <p class="subtitle">Understanding How Distance and Focal Length Shape Our Visual World</p>
+            <p class="intro">
+                This project explores the fundamental relationship between camera position, focal length, and
+                perspective distortion.
+                Through three distinct experiments, we'll discover why stepping back and zooming in creates more
+                flattering portraits,
+                how architectural photography can compress or expand space, and how Hollywood creates the iconic "dolly
+                zoom" effect.
+            </p>
+        </header>
+
+        <section class="section">
+            <h2>Part 1: Selfie - The Wrong Way vs. The Right Way</h2>
+            <div class="section-content">
+                <div class="explanation">
+                    <strong>Explanation:</strong> The left photo is the close up, and the right photo is the zoom in
+                    from a distance.
+                    The right photo looks better because the distance ratios between facial features become more
+                    proportional,
+                    creating a more natural and flattering representation.
+                </div>
+
+                <div class="comparison">
+                    <div class="image-container">
+                        <img src="media/oneClose.HEIC" alt="Close-up selfie showing perspective distortion">
+                        <div class="image-caption">Close-up: Distorted Perspective</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="media/oneZoom.heic" alt="Zoomed selfie with natural proportions">
+                        <div class="image-caption">Stepped Back + Zoom: Natural Proportions</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Part 2: Architectural Perspective Compression</h2>
+            <div class="section-content">
+                <div class="explanation">
+                    <strong>Explanation:</strong> The left side is from a distance zoomed in - it takes away the depth
+                    of the photo,
+                    it compresses it as apart to the right photo where you have a sense of depth of objects and
+                    buildings.
+                </div>
+
+                <div class="comparison">
+                    <div class="image-container">
+                        <img src="media/twoZoom.HEIC" alt="Telephoto shot showing compressed perspective">
+                        <div class="image-caption">Telephoto: Compressed & Flattened</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="media/twoClose.HEIC" alt="Wide-angle shot showing expanded perspective">
+                        <div class="image-caption">Wide-angle: Expanded & Deep</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Part 3: The Dolly Zoom (Vertigo Effect)</h2>
+            <div class="section-content">
+                <div class="explanation">
+                    <strong>Explanation:</strong> This is the dolly effect seen in many famous movies - always wondered
+                    how they made it!
+                </div>
+
+                <div class="video-container">
+                    <img src="media/Dolly.gif" alt="The Dolly Zoom effect in action">
+                    <div class="video-caption">The Dolly Zoom in Action</div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+
+</body>
+
+</html>
