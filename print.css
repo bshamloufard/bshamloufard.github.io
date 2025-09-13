@@ -1,0 +1,73 @@
+@media print {
+
+    /* Let content expand */
+    html,
+    body {
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    * {
+        overflow: visible !important;
+    }
+
+    /* Remove height caps */
+    .scroll,
+    [style*="height"],
+    [style*="max-height"] {
+        height: auto !important;
+        max-height: none !important;
+    }
+
+    /* Kill scroll containers */
+    .overflow-auto,
+    .overflow-scroll,
+    .overflow-y-scroll {
+        overflow: visible !important;
+    }
+
+    /* Turn off sticky/fixed elements */
+    header,
+    nav,
+    .sticky,
+    .fixed,
+    [style*="position:sticky"],
+    [style*="position:fixed"] {
+        position: static !important;
+    }
+
+    /* Avoid pieces splitting across pages */
+    .card,
+    .section,
+    table,
+    tr,
+    img,
+    pre,
+    blockquote {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    .page-break {
+        break-after: page;
+    }
+
+    /* Colors (optional) */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+
+    /* Hide interactive-only UI */
+    .no-print,
+    .btn,
+    .dropdown,
+    .modal,
+    .tooltip {
+        display: none !important;
+    }
+
+    /* Make widths fluid */
+    .container {
+        width: auto !important;
+        max-width: none !important;
+    }
+}

@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project 1: Prokudin-Gorskii Colorizer - Ben Shamloufard</title>
+    <link rel="stylesheet" href="../print.css" media="print">
     <style>
         * {
             margin: 0;
@@ -366,6 +367,37 @@
         </section>
 
         <section class="section">
+            <h2>Part 1: Single-Scale Implementation</h2>
+            <div class="algorithm-section">
+                <p>
+                    For the single-scale implementation, which is applied to lower-resolution JPG images, the red and
+                    green
+                    color channels are aligned against the fixed blue channel using our <code>align</code> function. The
+                    alignment process involves an exhaustive search for the optimal pixel displacement within a
+                    predefined
+                    window, controlled by the <code>searchRadius=15</code> parameter.
+                </p>
+                <p>
+                    To evaluate the quality of each potential alignment, we use our <code>nccScore</code> function,
+                    which is
+                    passed in as the <code>scoreFn</code>. NCC is a robust metric that measures the similarity between
+                    two
+                    images while being insensitive to linear variations in brightness and contrast. To further improve
+                    accuracy, the <code>align</code> function uses a <code>borderIgnorePct=0.1</code> to crop a 10%
+                    border
+                    from each side of the images before the score is calculated, preventing edge artifacts from
+                    influencing
+                    the result.
+                </p>
+                <p>
+                    The displacement that yields the highest score is considered the optimal alignment. Once the best
+                    offsets are determined, the channels are shifted using <code>np.roll</code>. Finally, the aligned
+                    channels are stacked to produce the final colorized RGB image.
+                </p>
+            </div>
+        </section>
+
+        <section class="section">
             <h2>Part 1: Single-Scale Alignment (Small Images)</h2>
             <div class="section-content">
                 <div class="explanation">
@@ -400,6 +432,46 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Part 2: Multi-Scale Pyramid Implementation</h2>
+            <div class="algorithm-section">
+                <p>
+                    For high-resolution TIF images, a single-scale search is computationally prohibitive. Instead, we
+                    employ
+                    a more efficient multi-scale image pyramid strategy using our <code>pyramidAlign</code> function to
+                    find
+                    the optimal alignment in a coarse-to-fine manner.
+                </p>
+                <p>
+                    First, a helper function, <code>makePyramid</code>, constructs an image pyramid for each channel by
+                    progressively downscaling the image by a factor of <code>scale=0.5</code>. The
+                    <code>pyramidAlign</code> function begins its search at the coarsest level of the pyramid,
+                    performing a
+                    wide search with <code>coarseRadius=20</code> to find an initial displacement.
+                </p>
+                <p>
+                    The scoring metric at this stage, passed in as the <code>scoreFn</code>, is our
+                    <code>gradNccScore</code> function. This function first computes the gradient magnitude of the
+                    images
+                    using Sobel filters and then calculates the NCC on those gradients. This focuses on aligning
+                    structural
+                    features and edges, making it more robust.
+                </p>
+                <p>
+                    The displacement found at the coarse level is then scaled up and used as the starting point for a
+                    refined search using <code>refineRadius=4</code> at the next, finer pyramid level. This process is
+                    repeated iteratively up to the original, full-resolution image. By calling our <code>align</code>
+                    function at each level with a smaller search radius, the algorithm efficiently hones in on the
+                    precise
+                    alignment.
+                </p>
+                <p>
+                    Once the final, accumulated displacement is determined, the channels are rolled into alignment and
+                    stacked with the blue channel to create the final, high-quality color image.
+                </p>
             </div>
         </section>
 
