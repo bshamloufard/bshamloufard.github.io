@@ -1,14 +1,40 @@
 @media print {
 
-    /* Let content expand */
+    /* Reset page layout for printing */
     html,
     body {
         height: auto !important;
         overflow: visible !important;
+        background: none !important;
+        color: #000 !important;
     }
 
+    .content {
+        min-height: auto !important;
+        background: none !important;
+        box-shadow: none !important;
+    }
+
+    /* Hide non-essential elements */
+    #video-background,
+    .nav,
+    .no-print {
+        display: none !important;
+    }
+
+    /* Let content expand */
     * {
         overflow: visible !important;
+        text-shadow: none !important;
+    }
+
+    /* Turn off fixed/absolute positioning, floats, and columns */
+    * {
+        position: static !important;
+    }
+
+    .float {
+        float: none !important;
     }
 
     /* Remove height caps */
@@ -37,8 +63,13 @@
     }
 
     /* Avoid pieces splitting across pages */
+    .no-break,
+    figure,
     .card,
     .section,
+    .image-container,
+    .video-container,
+    .project-card,
     table,
     tr,
     img,
@@ -46,15 +77,21 @@
     blockquote {
         break-inside: avoid;
         page-break-inside: avoid;
+        /* legacy */
     }
 
+    /* Page break utilities */
     .page-break {
-        break-after: page;
+        break-before: page;
+        page-break-before: always;
+        /* legacy */
     }
 
-    /* Colors (optional) */
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    .page-break-after {
+        break-after: page;
+        page-break-after: always;
+        /* legacy */
+    }
 
     /* Hide interactive-only UI */
     .no-print,
@@ -66,8 +103,27 @@
     }
 
     /* Make widths fluid */
-    .container {
-        width: auto !important;
-        max-width: none !important;
+    .container,
+    .section,
+    .header {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 0 2rem 0 !important;
+    }
+
+    .section-content {
+        border: 1px solid #ccc !important;
+        padding: 1rem !important;
+        backdrop-filter: none !important;
+        background: none !important;
+        column-count: 2;
+        column-gap: 2rem;
+    }
+
+    /* Reset grid layouts to flow in columns */
+    .comparison,
+    .project-grid {
+        display: block !important;
     }
 }
