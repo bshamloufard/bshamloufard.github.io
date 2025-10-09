@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project 3 - Image Warping and Mosaicing</title>
+    <link rel="stylesheet" href="../print.css" media="print">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body,
+        html {
+            height: 100%;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            background-color: #1a1a1a;
+            color: white;
+            font-family: 'Georgia', serif;
+        }
+
+        /* Video Background */
+        #video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            object-fit: cover;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        /* Content */
+        .content {
+            position: relative;
+            z-index: 1;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+            font-size: 1.1rem;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav a:hover {
+            opacity: 0.7;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 8rem 0 4rem;
+        }
+
+        .header h1 {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+
+        .header p {
+            font-size: 1.5rem;
+            max-width: 1000px;
+            margin: 0 auto;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        /* Section */
+        .section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h2,
+        h3,
+        h4 {
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            margin-bottom: 1rem;
+        }
+
+        h2 {
+            font-size: 2.8rem;
+            text-align: center;
+            color: #ffd700;
+        }
+
+        h3 {
+            font-size: 2.2rem;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.5);
+            padding-bottom: 0.5rem;
+        }
+
+        h4 {
+            font-size: 1.8rem;
+            color: #f0f0f0;
+        }
+
+        p {
+            font-size: 1.2rem;
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Gallery */
+        .gallery {
+            display: grid;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .gallery-1-col {
+            grid-template-columns: 1fr;
+        }
+
+        .gallery-2-col {
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        }
+
+        .gallery-3-col {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+        .gallery-item {
+            text-align: center;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .gallery-item img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6);
+        }
+
+        .gallery-item p {
+            margin-top: 0.8rem;
+            font-style: italic;
+            font-size: 1rem;
+            color: #ccc;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* Code Blocks */
+        pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #f0f0f0;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        code {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <video id="video-background" autoplay muted loop>
+        <source src="../fixedTranquil.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <div class="content">
+        <nav class="nav">
+            <a href="../index.html">← Back to Portfolio</a>
+        </nav>
+
+        <div class="header">
+            <h1>Project 3: Image Warping and Mosaicing</h1>
+            <p>
+                This project focuses on the fundamentals of image warping and mosaicing. The goal is to take multiple
+                photographs of a scene, align them using projective transformations (homographies), and blend them
+                together to create a seamless panoramic image. This involves manually defining point correspondences,
+                computing the homography matrix, warping the images into a common coordinate system, and applying a
+                blending technique to hide the seams.
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>Part A.1: Shoot the Pictures</h2>
+            <p>
+                The first step was to capture source images suitable for creating a panoramic mosaic. This requires
+                taking two or more photographs where the transformation between them is a projective one. The most
+                common way to achieve this is to keep the camera's center of projection fixed while rotating it to
+                capture overlapping fields of view. For this project, I took three sets of images, ensuring about 40-70%
+                overlap between them to make the registration process easier. The scenes chosen were two different views
+                of a backyard and one of a kitchen interior.
+            </p>
+            <div class="gallery gallery-1-col">
+                <div class="gallery-item">
+                    <img src="../proj3Output/A1/mosaic_image_sets.png" alt="Mosaic Image Sets">
+                    <p>The three sets of source images for the mosaics.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Part A.2: Recover Homographies</h2>
+            <p>
+                Before the images can be stitched together, we need to compute the transformation that maps one image
+                onto the other. For images taken from the same point of view, this transformation is a
+                <strong>homography</strong>, a 3x3 matrix that describes a projective transformation.
+            </p>
+
+            <h3>The computeH Function</h3>
+            <p>
+                I implemented the function <code>computeH(im1_pts, im2_pts)</code> to recover the homography matrix from
+                a set of corresponding points. This function takes two n by 2 matrices, where each row represents the
+                (x, y) coordinates of a manually selected point in each image. With at least 4 point correspondences, we
+                can solve for the 8 unknown parameters of the homography matrix.
+            </p>
+
+            <h4>Mathematical Formulation</h4>
+            <p>
+                The homography is defined by the equation <code>p' = Hp</code>, which relates a point <code>p</code> in
+                one image to a corresponding point <code>p'</code> in another. By rearranging this equation, we can set
+                up a homogeneous system of linear equations of the form <strong><code>Ah = 0</code></strong>, where
+                <strong><code>h</code></strong> is a 9-element vector containing all the entries of the homography
+                matrix H.
+            </p>
+            <p>
+                The unknown vector <strong><code>h</code></strong> is:
+                <code>h = [h11, h12, h13, h21, h22, h23, h31, h32, h33]^T</code>.
+            </p>
+            <p>
+                While this system can be solved using techniques like Singular Value Decomposition (SVD), a common and
+                practical approach is to convert it into an inhomogeneous system. By setting the scaling factor
+                <code>h33 = 1</code>, we reduce the number of unknowns from nine to eight. This reformulates the problem
+                into the form <strong><code>Ah = b</code></strong>, which can be solved efficiently using a standard
+                least-squares solver. This is the exact method that was implemented for this project.
+            </p>
+            <p>
+                For each point pair (x,y) ↔ (u,v), the system sets up two equations to solve for the 8 unknown
+                parameters:
+            </p>
+            <pre><code>[ x  y  1  0  0  0  -ux  -uy ] [h11]   [u]
+[ 0  0  0  x  y  1  -vx  -vy ] [h12] = [v]
+                                [h13]
+                                [h21]
+                                [h22]
+                                [h23]
+                                [h31]
+                                [h32]</code></pre>
+            <p>
+                Since 10 correspondence points were used for each mosaic, this created an overdetermined system of 20
+                equations, which was solved using <code>np.linalg.lstsq</code> to find the optimal
+                <strong><code>h</code></strong> vector.
+            </p>
+
+            <h3>Correspondence Results</h3>
+
+            <h4>Mosaic 1: Backyard</h4>
+            <div class="gallery gallery-2-col">
+                <div class="gallery-item">
+                    <img src="../proj3Output/A2/correspondences_1_backyard.png" alt="Backyard Correspondences">
+                    <p>Point correspondences for the backyard scene.</p>
+                </div>
+                <div class="gallery-item">
+                    <h4>Homography Matrix H₁</h4>
+                    <pre><code>⎡ 1.470470e+00  -2.351720e-03  -1.671768e+03 ⎤
+⎢ 3.473996e-01   1.294258e+00  -6.457900e+02 ⎥
+⎣ 1.633328e-04  -7.709339e-06   1.000000e+00 ⎦</code></pre>
+                </div>
+            </div>
+
+            <h4>Mosaic 2: Kitchen</h4>
+            <div class="gallery gallery-2-col">
+                <div class="gallery-item">
+                    <img src="../proj3Output/A2/correspondences_2_kitchen.png" alt="Kitchen Correspondences">
+                    <p>Point correspondences for the kitchen scene.</p>
+                </div>
+                <div class="gallery-item">
+                    <h4>Homography Matrix H₂</h4>
+                    <pre><code>⎡ 1.369051e+00  -2.022396e-03  -1.671145e+03 ⎤
+⎢ 2.537873e-01   1.186942e+00  -4.432347e+02 ⎥
+⎣ 1.238760e-04  -3.375904e-05   1.000000e+00 ⎦</code></pre>
+                </div>
+            </div>
+
+            <h4>Mosaic 3: Backyard Grill</h4>
+            <div class="gallery gallery-2-col">
+                <div class="gallery-item">
+                    <img src="../proj3Output/A2/correspondences_3_backyard_grill.png"
+                        alt="Backyard Grill Correspondences">
+                    <p>Point correspondences for the backyard grill scene.</p>
+                </div>
+                <div class="gallery-item">
+                    <h4>Homography Matrix H₃</h4>
+                    <pre><code>⎡ 1.526998e+00   6.116070e-02  -2.093398e+03 ⎤
+⎢ 3.171814e-01   1.359206e+00  -6.476913e+02 ⎥
+⎣ 1.744651e-04   2.456696e-06   1.000000e+00 ⎦</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Part A.3: Image Warping and Rectification</h2>
+            <p>
+                With the homography matrix computed, the next step is to warp the images into alignment. To avoid holes
+                or aliasing artifacts in the output, I used <strong>inverse warping</strong>. Instead of mapping pixels
+                from the source to the destination, this method iterates through each pixel in the destination image,
+                applies the inverse homography (<code>H_inv</code>) to find its corresponding location in the source
+                image, and then samples the color from that location.
+            </p>
+
+            <h3>Interpolation Methods</h3>
+            <p>
+                Since the source coordinates rarely fall on an exact pixel, an interpolation method is needed. I
+                implemented two from scratch:
+            </p>
+            <ul>
+                <li><strong><code>warpImageNearestNeighbor(im, H)</code></strong>: This method is fast and simple. It
+                    rounds the calculated source coordinates to the nearest integer and copies the pixel value. While
+                    efficient, it can lead to blocky or pixelated results.</li>
+                <li><strong><code>warpImageBilinear(im, H)</code></strong>: This method produces smoother results by
+                    taking a weighted average of the four pixels surrounding the calculated source coordinate. The
+                    weights are determined by the coordinate's fractional distance to each of the four neighbors. This
+                    comes at a higher computational cost.</li>
+            </ul>
+
+            <h3>Image Rectification</h3>
+            <p>
+                A practical application of homography and warping is image rectification. This process transforms an
+                image to correct for perspective distortion, making objects appear as if they were viewed from a
+                frontal-parallel viewpoint. I took photos of rectangular objects (a monitor and a wooden cube), manually
+                selected their four corners, and defined a target rectangle. By computing the homography between these
+                two sets of points and warping the image, I was able to "flatten" the objects.
+            </p>
+
+            <h4>Rectification Example 1: Monitor</h4>
+            <div class="gallery gallery-1-col">
+                <div class="gallery-item">
+                    <img src="../proj3Output/A3/rectification_1_monitor.png" alt="Monitor Rectification">
+                    <p>Comparison for Monitor Rectification. NN: 0.21s, Bilinear: 0.42s.</p>
+                </div>
+            </div>
+
+            <h4>Rectification Example 2: Cube Block</h4>
+            <div class="gallery gallery-1-col">
+                <div class="gallery-item">
+                    <img src="../proj3Output/A3/rectification_2_cube_block.png" alt="Cube Block Rectification">
+                    <p>Comparison for Cube Block Rectification. NN: 1.55s, Bilinear: 2.77s.</p>
+                </div>
+            </div>
+
+            <h4>Performance Comparison</h4>
+            <p>
+                As expected, Bilinear Interpolation was consistently slower than Nearest Neighbor—roughly twice as slow
+                in these examples. However, it produces noticeably smoother and higher-quality results, reducing the
+                jagged edges that are sometimes visible with Nearest Neighbor. For applications like mosaicing where
+                visual quality is key, the extra processing time for bilinear interpolation is a worthwhile trade-off.
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>Part A.4: Image Mosaicing</h2>
+            <p>
+                The final step is to combine all the previous parts to create panoramic mosaics. My approach was to keep
+                one image fixed as a reference and warp the other image to align with it using the computed homography.
+                To avoid harsh seams in the overlapping regions, I implemented a blending technique known as
+                <strong>feathering</strong>.
+            </p>
+
+            <h3>Blending Technique: Distance-Based Feathering</h3>
+            <p>
+                Instead of simple averaging, I used a more sophisticated weighted blending approach. My
+                <code>create_alpha_mask(mask)</code> function generates an alpha mask for each image where the alpha
+                value of a pixel is proportional to its distance from the nearest edge. This means pixels near the
+                center of an image have a weight of 1, and the weight smoothly falls off to 0 at the boundaries.
+            </p>
+            <p>
+                In the overlapping region, the final color of a pixel is the weighted average of the colors from both
+                images, using these alpha masks. This creates a smooth and often imperceptible transition between the
+                stitched images, as shown in the results below. The <code>blend_mosaics(img1, img2, H)</code> function
+                orchestrates this entire process: calculating the final canvas size, warping the second image, creating
+                the alpha masks, and blending them together.
+            </p>
+
+            <h3>Mosaic Results</h3>
+
+            <h4>Mosaic 1: Backyard</h4>
+            <div class="gallery gallery-3-col">
+                <div class="gallery-item">
+                    <img src="../proj3Output/A4/mosaic_1_backyard.png" alt="Backyard Mosaic">
+                    <p>Final Blended Mosaic</p>
+                </div>
+            </div>
+
+            <h4>Mosaic 2: Kitchen</h4>
+            <div class="gallery gallery-3-col">
+                <div class="gallery-item">
+                    <img src="../proj3Output/A4/mosaic_2_kitchen.png" alt="Kitchen Mosaic">
+                    <p>Final Blended Mosaic</p>
+                </div>
+            </div>
+
+            <h4>Mosaic 3: Backyard Grill</h4>
+            <div class="gallery gallery-3-col">
+                <div class="gallery-item">
+                    <img src="../proj3Output/A4/mosaic_3_backyard_grill.png" alt="Backyard Grill Mosaic">
+                    <p>Final Blended Mosaic</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Conclusion</h2>
+            <p>
+                This project was a deep dive into the geometric transformations that underpin computational photography
+                tasks like panorama stitching. Implementing the entire pipeline from scratch, from computing
+                homographies with least squares to writing my own image warping and interpolation functions, provided a
+                solid understanding of the theory. The most satisfying part was seeing the final mosaics come together,
+                where distinct images seamlessly merged into a single, cohesive panorama. It highlighted how a series of
+                well-defined mathematical and algorithmic steps can create a result that is both technically impressive
+                and artistically pleasing.
+            </p>
+        </div>
+
+    </div>
+</body>
+
+</html>
