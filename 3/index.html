@@ -88,6 +88,40 @@
             opacity: 0.9;
         }
 
+        /* Tab Controls */
+        .tab-controls {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            border-radius: 10px;
+            margin: 0 0.5rem;
+        }
+
+        .tab-btn.active,
+        .tab-btn:hover {
+            background: rgba(255, 215, 0, 0.8);
+            color: #1a1a1a;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+
         /* Section */
         .section {
             background: rgba(255, 255, 255, 0.05);
@@ -216,64 +250,80 @@
             </p>
         </div>
 
-        <div class="section">
-            <h2>Part A.1: Shoot the Pictures</h2>
-            <p>
-                The first step was to capture source images suitable for creating a panoramic mosaic. This requires
-                taking two or more photographs where the transformation between them is a projective one. The most
-                common way to achieve this is to keep the camera's center of projection fixed while rotating it to
-                capture overlapping fields of view. For this project, I took three sets of images, ensuring about 40-70%
-                overlap between them to make the registration process easier. The scenes chosen were two different views
-                of a backyard and one of a kitchen interior.
-            </p>
-            <div class="gallery gallery-1-col">
-                <div class="gallery-item">
-                    <img src="../proj3Output/A1/mosaic_image_sets.png" alt="Mosaic Image Sets">
-                    <p>The three sets of source images for the mosaics.</p>
-                </div>
-            </div>
+        <div class="tab-controls">
+            <button class="tab-btn active" onclick="showTab('partA')">Part A: Manual Stitching</button>
+            <button class="tab-btn" onclick="showTab('partB')">Part B: Automatic Stitching</button>
         </div>
 
-        <div class="section">
-            <h2>Part A.2: Recover Homographies</h2>
-            <p>
-                Before the images can be stitched together, we need to compute the transformation that maps one image
-                onto the other. For images taken from the same point of view, this transformation is a
-                <strong>homography</strong>, a 3x3 matrix that describes a projective transformation.
-            </p>
+        <div id="partA" class="tab-content active">
+            <div class="section">
+                <h2>Part A.1: Shoot the Pictures</h2>
+                <p>
+                    The first step was to capture source images suitable for creating a panoramic mosaic. This requires
+                    taking two or more photographs where the transformation between them is a projective one. The most
+                    common way to achieve this is to keep the camera's center of projection fixed while rotating it to
+                    capture overlapping fields of view. For this project, I took three sets of images, ensuring about
+                    40-70%
+                    overlap between them to make the registration process easier. The scenes chosen were two different
+                    views
+                    of a backyard and one of a kitchen interior.
+                </p>
+                <div class="gallery gallery-1-col">
+                    <div class="gallery-item">
+                        <img src="../proj3Output/A1/mosaic_image_sets.png" alt="Mosaic Image Sets">
+                        <p>The three sets of source images for the mosaics.</p>
+                    </div>
+                </div>
+            </div>
 
-            <h3>The computeH Function</h3>
-            <p>
-                I implemented the function <code>computeH(im1_pts, im2_pts)</code> to recover the homography matrix from
-                a set of corresponding points. This function takes two n by 2 matrices, where each row represents the
-                (x, y) coordinates of a manually selected point in each image. With at least 4 point correspondences, we
-                can solve for the 8 unknown parameters of the homography matrix.
-            </p>
+            <div class="section">
+                <h2>Part A.2: Recover Homographies</h2>
+                <p>
+                    Before the images can be stitched together, we need to compute the transformation that maps one
+                    image
+                    onto the other. For images taken from the same point of view, this transformation is a
+                    <strong>homography</strong>, a 3x3 matrix that describes a projective transformation.
+                </p>
 
-            <h4>Mathematical Formulation</h4>
-            <p>
-                The homography is defined by the equation <code>p' = Hp</code>, which relates a point <code>p</code> in
-                one image to a corresponding point <code>p'</code> in another. By rearranging this equation, we can set
-                up a homogeneous system of linear equations of the form <strong><code>Ah = 0</code></strong>, where
-                <strong><code>h</code></strong> is a 9-element vector containing all the entries of the homography
-                matrix H.
-            </p>
-            <p>
-                The unknown vector <strong><code>h</code></strong> is:
-                <code>h = [h11, h12, h13, h21, h22, h23, h31, h32, h33]^T</code>.
-            </p>
-            <p>
-                While this system can be solved using techniques like Singular Value Decomposition (SVD), a common and
-                practical approach is to convert it into an inhomogeneous system. By setting the scaling factor
-                <code>h33 = 1</code>, we reduce the number of unknowns from nine to eight. This reformulates the problem
-                into the form <strong><code>Ah = b</code></strong>, which can be solved efficiently using a standard
-                least-squares solver. This is the exact method that was implemented for this project.
-            </p>
-            <p>
-                For each point pair (x,y) ↔ (u,v), the system sets up two equations to solve for the 8 unknown
-                parameters:
-            </p>
-            <pre><code>[ x  y  1  0  0  0  -ux  -uy ] [h11]   [u]
+                <h3>The computeH Function</h3>
+                <p>
+                    I implemented the function <code>computeH(im1_pts, im2_pts)</code> to recover the homography matrix
+                    from
+                    a set of corresponding points. This function takes two n by 2 matrices, where each row represents
+                    the
+                    (x, y) coordinates of a manually selected point in each image. With at least 4 point
+                    correspondences, we
+                    can solve for the 8 unknown parameters of the homography matrix.
+                </p>
+
+                <h4>Mathematical Formulation</h4>
+                <p>
+                    The homography is defined by the equation <code>p' = Hp</code>, which relates a point <code>p</code>
+                    in
+                    one image to a corresponding point <code>p'</code> in another. By rearranging this equation, we can
+                    set
+                    up a homogeneous system of linear equations of the form <strong><code>Ah = 0</code></strong>, where
+                    <strong><code>h</code></strong> is a 9-element vector containing all the entries of the homography
+                    matrix H.
+                </p>
+                <p>
+                    The unknown vector <strong><code>h</code></strong> is:
+                    <code>h = [h11, h12, h13, h21, h22, h23, h31, h32, h33]^T</code>.
+                </p>
+                <p>
+                    While this system can be solved using techniques like Singular Value Decomposition (SVD), a common
+                    and
+                    practical approach is to convert it into an inhomogeneous system. By setting the scaling factor
+                    <code>h33 = 1</code>, we reduce the number of unknowns from nine to eight. This reformulates the
+                    problem
+                    into the form <strong><code>Ah = b</code></strong>, which can be solved efficiently using a standard
+                    least-squares solver. This is the exact method that was implemented for this project.
+                </p>
+                <p>
+                    For each point pair (x,y) ↔ (u,v), the system sets up two equations to solve for the 8 unknown
+                    parameters:
+                </p>
+                <pre><code>[ x  y  1  0  0  0  -ux  -uy ] [h11]   [u]
 [ 0  0  0  x  y  1  -vx  -vy ] [h12] = [v]
                                 [h13]
                                 [h21]
@@ -281,182 +331,401 @@
                                 [h23]
                                 [h31]
                                 [h32]</code></pre>
-            <p>
-                Since 10 correspondence points were used for each mosaic, this created an overdetermined system of 20
-                equations, which was solved using <code>np.linalg.lstsq</code> to find the optimal
-                <strong><code>h</code></strong> vector.
-            </p>
+                <p>
+                    Since 10 correspondence points were used for each mosaic, this created an overdetermined system of
+                    20
+                    equations, which was solved using <code>np.linalg.lstsq</code> to find the optimal
+                    <strong><code>h</code></strong> vector.
+                </p>
 
-            <h3>Correspondence Results</h3>
+                <h3>Correspondence Results</h3>
 
-            <h4>Mosaic 1: Backyard</h4>
-            <div class="gallery gallery-2-col">
-                <div class="gallery-item">
-                    <img src="../proj3Output/A2/correspondences_1_backyard.png" alt="Backyard Correspondences">
-                    <p>Point correspondences for the backyard scene.</p>
-                </div>
-                <div class="gallery-item">
-                    <h4>Homography Matrix H₁</h4>
-                    <pre><code>⎡ 1.470470e+00  -2.351720e-03  -1.671768e+03 ⎤
+                <h4>Mosaic 1: Backyard</h4>
+                <div class="gallery gallery-2-col">
+                    <div class="gallery-item">
+                        <img src="../proj3Output/A2/correspondences_1_backyard.png" alt="Backyard Correspondences">
+                        <p>Point correspondences for the backyard scene.</p>
+                    </div>
+                    <div class="gallery-item">
+                        <h4>Homography Matrix H₁</h4>
+                        <pre><code>⎡ 1.470470e+00  -2.351720e-03  -1.671768e+03 ⎤
 ⎢ 3.473996e-01   1.294258e+00  -6.457900e+02 ⎥
 ⎣ 1.633328e-04  -7.709339e-06   1.000000e+00 ⎦</code></pre>
+                    </div>
                 </div>
-            </div>
 
-            <h4>Mosaic 2: Kitchen</h4>
-            <div class="gallery gallery-2-col">
-                <div class="gallery-item">
-                    <img src="../proj3Output/A2/correspondences_2_kitchen.png" alt="Kitchen Correspondences">
-                    <p>Point correspondences for the kitchen scene.</p>
-                </div>
-                <div class="gallery-item">
-                    <h4>Homography Matrix H₂</h4>
-                    <pre><code>⎡ 1.369051e+00  -2.022396e-03  -1.671145e+03 ⎤
+                <h4>Mosaic 2: Kitchen</h4>
+                <div class="gallery gallery-2-col">
+                    <div class="gallery-item">
+                        <img src="../proj3Output/A2/correspondences_2_kitchen.png" alt="Kitchen Correspondences">
+                        <p>Point correspondences for the kitchen scene.</p>
+                    </div>
+                    <div class="gallery-item">
+                        <h4>Homography Matrix H₂</h4>
+                        <pre><code>⎡ 1.369051e+00  -2.022396e-03  -1.671145e+03 ⎤
 ⎢ 2.537873e-01   1.186942e+00  -4.432347e+02 ⎥
 ⎣ 1.238760e-04  -3.375904e-05   1.000000e+00 ⎦</code></pre>
+                    </div>
                 </div>
-            </div>
 
-            <h4>Mosaic 3: Backyard Grill</h4>
-            <div class="gallery gallery-2-col">
-                <div class="gallery-item">
-                    <img src="../proj3Output/A2/correspondences_3_backyard_grill.png"
-                        alt="Backyard Grill Correspondences">
-                    <p>Point correspondences for the backyard grill scene.</p>
-                </div>
-                <div class="gallery-item">
-                    <h4>Homography Matrix H₃</h4>
-                    <pre><code>⎡ 1.526998e+00   6.116070e-02  -2.093398e+03 ⎤
+                <h4>Mosaic 3: Backyard Grill</h4>
+                <div class="gallery gallery-2-col">
+                    <div class="gallery-item">
+                        <img src="../proj3Output/A2/correspondences_3_backyard_grill.png"
+                            alt="Backyard Grill Correspondences">
+                        <p>Point correspondences for the backyard grill scene.</p>
+                    </div>
+                    <div class="gallery-item">
+                        <h4>Homography Matrix H₃</h4>
+                        <pre><code>⎡ 1.526998e+00   6.116070e-02  -2.093398e+03 ⎤
 ⎢ 3.171814e-01   1.359206e+00  -6.476913e+02 ⎥
 ⎣ 1.744651e-04   2.456696e-06   1.000000e+00 ⎦</code></pre>
+                    </div>
                 </div>
+            </div>
+
+            <div class="section">
+                <h2>Part A.3: Image Warping and Rectification</h2>
+                <p>
+                    With the homography matrix computed, the next step is to warp the images into alignment. To avoid
+                    holes
+                    or aliasing artifacts in the output, I used <strong>inverse warping</strong>. Instead of mapping
+                    pixels
+                    from the source to the destination, this method iterates through each pixel in the destination
+                    image,
+                    applies the inverse homography (<code>H_inv</code>) to find its corresponding location in the source
+                    image, and then samples the color from that location.
+                </p>
+
+                <h3>Interpolation Methods</h3>
+                <p>
+                    Since the source coordinates rarely fall on an exact pixel, an interpolation method is needed. I
+                    implemented two from scratch:
+                </p>
+                <ul>
+                    <li><strong><code>warpImageNearestNeighbor(im, H)</code></strong>: This method is fast and simple.
+                        It
+                        rounds the calculated source coordinates to the nearest integer and copies the pixel value.
+                        While
+                        efficient, it can lead to blocky or pixelated results.</li>
+                    <li><strong><code>warpImageBilinear(im, H)</code></strong>: This method produces smoother results by
+                        taking a weighted average of the four pixels surrounding the calculated source coordinate. The
+                        weights are determined by the coordinate's fractional distance to each of the four neighbors.
+                        This
+                        comes at a higher computational cost.</li>
+                </ul>
+
+                <h3>Image Rectification</h3>
+                <p>
+                    A practical application of homography and warping is image rectification. This process transforms an
+                    image to correct for perspective distortion, making objects appear as if they were viewed from a
+                    frontal-parallel viewpoint. I took photos of rectangular objects (a monitor and a wooden cube),
+                    manually
+                    selected their four corners, and defined a target rectangle. By computing the homography between
+                    these
+                    two sets of points and warping the image, I was able to "flatten" the objects.
+                </p>
+
+                <h4>Rectification Example 1: Monitor</h4>
+                <div class="gallery gallery-1-col">
+                    <div class="gallery-item">
+                        <img src="../proj3Output/A3/rectification_1_monitor.png" alt="Monitor Rectification">
+                        <p>Comparison for Monitor Rectification. NN: 0.21s, Bilinear: 0.42s.</p>
+                    </div>
+                </div>
+
+                <h4>Rectification Example 2: Cube Block</h4>
+                <div class="gallery gallery-1-col">
+                    <div class="gallery-item">
+                        <img src="../proj3Output/A3/rectification_2_cube_block.png" alt="Cube Block Rectification">
+                        <p>Comparison for Cube Block Rectification. NN: 1.55s, Bilinear: 2.77s.</p>
+                    </div>
+                </div>
+
+                <h4>Performance Comparison</h4>
+                <p>
+                    As expected, Bilinear Interpolation was consistently slower than Nearest Neighbor roughly twice as
+                    slow
+                    in these examples. However, it produces noticeably smoother and higher-quality results, reducing the
+                    jagged edges that are sometimes visible with Nearest Neighbor. For applications like mosaicing where
+                    visual quality is key, the extra processing time for bilinear interpolation is a worthwhile
+                    trade-off.
+                </p>
+            </div>
+
+            <div class="section">
+                <h2>Part A.4: Image Mosaicing</h2>
+                <p>
+                    The final step is to combine all the previous parts to create panoramic mosaics. My approach was to
+                    keep
+                    one image fixed as a reference and warp the other image to align with it using the computed
+                    homography.
+                    To avoid harsh seams in the overlapping regions, I implemented a blending technique known as
+                    <strong>feathering</strong>.
+                </p>
+
+                <h3>Blending Technique: Distance-Based Feathering</h3>
+                <p>
+                    Instead of simple averaging, I used a more sophisticated weighted blending approach. My
+                    <code>create_alpha_mask(mask)</code> function generates an alpha mask for each image where the alpha
+                    value of a pixel is proportional to its distance from the nearest edge. This means pixels near the
+                    center of an image have a weight of 1, and the weight smoothly falls off to 0 at the boundaries.
+                </p>
+                <p>
+                    In the overlapping region, the final color of a pixel is the weighted average of the colors from
+                    both
+                    images, using these alpha masks. This creates a smooth and often imperceptible transition between
+                    the
+                    stitched images, as shown in the results below. The <code>blend_mosaics(img1, img2, H)</code>
+                    function
+                    orchestrates this entire process: calculating the final canvas size, warping the second image,
+                    creating
+                    the alpha masks, and blending them together.
+                </p>
+
+                <h3>Mosaic Results</h3>
+
+                <h4>Mosaic 1: Backyard</h4>
+                <div class="gallery gallery-3-col">
+                    <div class="gallery-item">
+                        <img src="../proj3Output/A4/mosaic_1_backyard.png" alt="Backyard Mosaic">
+                        <p>Final Blended Mosaic</p>
+                    </div>
+                </div>
+
+                <h4>Mosaic 2: Kitchen</h4>
+                <div class="gallery gallery-3-col">
+                    <div class="gallery-item">
+                        <img src="../proj3Output/A4/mosaic_2_kitchen.png" alt="Kitchen Mosaic">
+                        <p>Final Blended Mosaic</p>
+                    </div>
+                </div>
+
+                <h4>Mosaic 3: Backyard Grill</h4>
+                <div class="gallery gallery-3-col">
+                    <div class="gallery-item">
+                        <img src="../proj3Output/A4/mosaic_3_backyard_grill.png" alt="Backyard Grill Mosaic">
+                        <p>Final Blended Mosaic</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Conclusion</h2>
+                <p>
+                    This project was a deep dive into the geometric transformations that underpin computational
+                    photography
+                    tasks like panorama stitching. Implementing the entire pipeline from scratch, from computing
+                    homographies with least squares to writing my own image warping and interpolation functions,
+                    provided a
+                    solid understanding of the theory. The most satisfying part was seeing the final mosaics come
+                    together,
+                    where distinct images seamlessly merged into a single, cohesive panorama. It highlighted how a
+                    series of
+                    well-defined mathematical and algorithmic steps can create a result that is both technically
+                    impressive
+                    and artistically pleasing.
+                </p>
             </div>
         </div>
 
-        <div class="section">
-            <h2>Part A.3: Image Warping and Rectification</h2>
-            <p>
-                With the homography matrix computed, the next step is to warp the images into alignment. To avoid holes
-                or aliasing artifacts in the output, I used <strong>inverse warping</strong>. Instead of mapping pixels
-                from the source to the destination, this method iterates through each pixel in the destination image,
-                applies the inverse homography (<code>H_inv</code>) to find its corresponding location in the source
-                image, and then samples the color from that location.
-            </p>
+        <div id="partB" class="tab-content">
+            <div class="section">
+                <h2>Part B: Automatic Feature Matching for Autostitching</h2>
+                <p>
+                    In this part of the project, I implemented an automatic image stitching pipeline, following the
+                    paper "Multi-Image Matching using Multi-Scale Oriented Patches" by Brown et al., but with several
+                    simplifications. This system automatically detects key feature points, describes them, matches them
+                    between images, and uses a robust algorithm to compute the transformation needed to create a
+                    seamless panorama.
+                </p>
+            </div>
 
-            <h3>Interpolation Methods</h3>
-            <p>
-                Since the source coordinates rarely fall on an exact pixel, an interpolation method is needed. I
-                implemented two from scratch:
-            </p>
-            <ul>
-                <li><strong><code>warpImageNearestNeighbor(im, H)</code></strong>: This method is fast and simple. It
-                    rounds the calculated source coordinates to the nearest integer and copies the pixel value. While
-                    efficient, it can lead to blocky or pixelated results.</li>
-                <li><strong><code>warpImageBilinear(im, H)</code></strong>: This method produces smoother results by
-                    taking a weighted average of the four pixels surrounding the calculated source coordinate. The
-                    weights are determined by the coordinate's fractional distance to each of the four neighbors. This
-                    comes at a higher computational cost.</li>
-            </ul>
-
-            <h3>Image Rectification</h3>
-            <p>
-                A practical application of homography and warping is image rectification. This process transforms an
-                image to correct for perspective distortion, making objects appear as if they were viewed from a
-                frontal-parallel viewpoint. I took photos of rectangular objects (a monitor and a wooden cube), manually
-                selected their four corners, and defined a target rectangle. By computing the homography between these
-                two sets of points and warping the image, I was able to "flatten" the objects.
-            </p>
-
-            <h4>Rectification Example 1: Monitor</h4>
-            <div class="gallery gallery-1-col">
-                <div class="gallery-item">
-                    <img src="../proj3Output/A3/rectification_1_monitor.png" alt="Monitor Rectification">
-                    <p>Comparison for Monitor Rectification. NN: 0.21s, Bilinear: 0.42s.</p>
+            <div class="section">
+                <h3>B.1: Harris Corner Detection & ANMS</h3>
+                <p>
+                    The first step in automatic stitching is to identify a set of stable, repeatable interest points. I
+                    used the Harris Corner Detector, implemented in the <code>get_harris_corners</code> function, to
+                    find points with high intensity variation in all directions. Raw Harris detection, however, often
+                    produces dense clusters of points in textured areas.
+                </p>
+                <p>
+                    To get a more spatially uniform distribution of features, I implemented <strong>Adaptive Non-Maximal
+                        Suppression (ANMS)</strong> in the <code>adaptive_non_maximal_suppression</code> function. For
+                    each corner, this algorithm calculates a suppression radius, which is the minimum distance to
+                    another corner that is significantly stronger (controlled by a robustness constant
+                    <code>c_robust = 0.9</code>). By selecting the 500 corners with the largest suppression radii, we
+                    ensure that the final points are strong but also spread out across the entire image, which is
+                    critical for a stable homography calculation.
+                </p>
+                <div class="gallery gallery-1-col">
+                    <div class="gallery-item">
+                        <img src="../proj3Output/SecondPart/B1/corners_1_Mosaic1_Left.png"
+                            alt="Harris Corners with and without ANMS">
+                        <p>Left: Original Image. Center: All 1157 detected Harris corners. Right: 500 corners after
+                            ANMS, showing much better spatial distribution.</p>
+                    </div>
                 </div>
             </div>
 
-            <h4>Rectification Example 2: Cube Block</h4>
-            <div class="gallery gallery-1-col">
-                <div class="gallery-item">
-                    <img src="../proj3Output/A3/rectification_2_cube_block.png" alt="Cube Block Rectification">
-                    <p>Comparison for Cube Block Rectification. NN: 1.55s, Bilinear: 2.77s.</p>
+            <div class="section">
+                <h3>B.2: Feature Descriptor Extraction</h3>
+                <p>
+                    Once interest points are identified, we need a way to describe the image patch around each point so
+                    that we can find its match in another image. In my <code>extract_feature_descriptors</code>
+                    function, I implemented the method from Section 4 of the paper. For each corner, a large 40x40 pixel
+                    window is extracted. This large window is blurred with a Gaussian (σ=2.5) and then downsampled to a
+                    compact 8x8 patch using bilinear interpolation.
+                </p>
+                <p>
+                    This process creates a low-frequency descriptor that is robust to small localization errors.
+                    Finally, each 8x8 descriptor is bias/gain-normalized by subtracting its mean and dividing by its
+                    standard deviation. This makes the descriptor invariant to changes in brightness and contrast,
+                    allowing for more reliable matching between images.
+                </p>
+                <div class="gallery gallery-1-col">
+                    <div class="gallery-item">
+                        <img src="../proj3Output/SecondPart/B2/descriptors_1_Mosaic1_Left.png"
+                            alt="Example Feature Descriptors">
+                        <p>Four randomly selected 8x8 feature descriptors from an image. These 64-dimensional vectors
+                            represent the local appearance around a keypoint.</p>
+                    </div>
                 </div>
             </div>
 
-            <h4>Performance Comparison</h4>
-            <p>
-                As expected, Bilinear Interpolation was consistently slower than Nearest Neighbor—roughly twice as slow
-                in these examples. However, it produces noticeably smoother and higher-quality results, reducing the
-                jagged edges that are sometimes visible with Nearest Neighbor. For applications like mosaicing where
-                visual quality is key, the extra processing time for bilinear interpolation is a worthwhile trade-off.
-            </p>
-        </div>
-
-        <div class="section">
-            <h2>Part A.4: Image Mosaicing</h2>
-            <p>
-                The final step is to combine all the previous parts to create panoramic mosaics. My approach was to keep
-                one image fixed as a reference and warp the other image to align with it using the computed homography.
-                To avoid harsh seams in the overlapping regions, I implemented a blending technique known as
-                <strong>feathering</strong>.
-            </p>
-
-            <h3>Blending Technique: Distance-Based Feathering</h3>
-            <p>
-                Instead of simple averaging, I used a more sophisticated weighted blending approach. My
-                <code>create_alpha_mask(mask)</code> function generates an alpha mask for each image where the alpha
-                value of a pixel is proportional to its distance from the nearest edge. This means pixels near the
-                center of an image have a weight of 1, and the weight smoothly falls off to 0 at the boundaries.
-            </p>
-            <p>
-                In the overlapping region, the final color of a pixel is the weighted average of the colors from both
-                images, using these alpha masks. This creates a smooth and often imperceptible transition between the
-                stitched images, as shown in the results below. The <code>blend_mosaics(img1, img2, H)</code> function
-                orchestrates this entire process: calculating the final canvas size, warping the second image, creating
-                the alpha masks, and blending them together.
-            </p>
-
-            <h3>Mosaic Results</h3>
-
-            <h4>Mosaic 1: Backyard</h4>
-            <div class="gallery gallery-3-col">
-                <div class="gallery-item">
-                    <img src="../proj3Output/A4/mosaic_1_backyard.png" alt="Backyard Mosaic">
-                    <p>Final Blended Mosaic</p>
+            <div class="section">
+                <h3>B.3: Feature Matching</h3>
+                <p>
+                    With descriptors extracted for both images, the next step is to find corresponding pairs. My
+                    <code>match_features_symmetric</code> function implements a robust matching strategy. For each
+                    descriptor in the first image, it finds the two nearest neighbors in the second image based on L2
+                    distance. A match is considered a potential candidate only if it satisfies Lowe's ratio test: the
+                    distance to the nearest neighbor divided by the distance to the second-nearest neighbor must be
+                    below a certain <code>threshold</code> (0.75). This filters out ambiguous matches.
+                </p>
+                <p>
+                    To further improve robustness, a symmetric constraint is applied. A match (i, j) is only kept if
+                    feature i in image 1 matches feature j in image 2, AND feature j in image 2 matches feature i in
+                    image 1. This mutual agreement eliminates many false positives, leaving a cleaner set of
+                    correspondences for the next step.
+                </p>
+                <div class="gallery gallery-2-col">
+                    <div class="gallery-item">
+                        <img src="../proj3Output/SecondPart/B3/matches_1_Backyard.png" alt="Backyard Matches">
+                        <p>Backyard: 219 symmetric matches found.</p>
+                    </div>
+                    <div class="gallery-item">
+                        <img src="../proj3Output/SecondPart/B3/matches_2_Backyard_Grill.png"
+                            alt="Backyard Grill Matches">
+                        <p>Backyard Grill: 114 symmetric matches found.</p>
+                    </div>
                 </div>
             </div>
 
-            <h4>Mosaic 2: Kitchen</h4>
-            <div class="gallery gallery-3-col">
-                <div class="gallery-item">
-                    <img src="../proj3Output/A4/mosaic_2_kitchen.png" alt="Kitchen Mosaic">
-                    <p>Final Blended Mosaic</p>
+            <div class="section">
+                <h3>B.4: RANSAC for Robust Homography Estimation</h3>
+                <p>
+                    The feature matches from the previous step still contain outliers (incorrect matches). To compute an
+                    accurate homography, these outliers must be ignored. I implemented the <strong>RANSAC (Random Sample
+                        Consensus)</strong> algorithm from scratch in my <code>ransac_homography</code> function. For
+                    thousands of iterations (30,000), the algorithm randomly selects 4 point correspondences,
+                    computes a candidate homography using the DLT method from <code>computeH</code>, and then counts the
+                    number of "inliers" other matches that are consistent with this homography, within a given pixel
+                    <code>threshold</code> (3.0 pixels).
+                </p>
+                <p>
+                    The homography with the largest set of inliers is chosen as the best model. As a final refinement
+                    step, the homography is recomputed using all the inlier points from this best model, leading to a
+                    highly accurate and robust transformation. This process effectively isolates the geometrically
+                    consistent matches from the noise.
+                </p>
+
+                <h3>Automatic Mosaic Results</h3>
+                <p>
+                    The final mosaics were created by warping the images with the RANSAC-computed homography and
+                    blending them with the same distance-based feathering as in Part A. The automatic method is not only
+                    faster but often produces more accurate alignments. Even with some initial outlier matches, the
+                    RANSAC algorithm is exceptionally effective at finding the true geometric consensus, resulting in a
+                    more precise alignment than is typically achievable with manual point selection.
+                </p>
+
+                <h4>Backyard: Manual vs. Automatic</h4>
+                <div class="gallery gallery-2-col">
+                    <div class="gallery-item">
+                        <img src="../proj3Output/SecondPart/B4/mosaic_1_manual.png" alt="Backyard Manual Mosaic">
+                        <p>Manual Mosaic (Part A)</p>
+                    </div>
+                    <div class="gallery-item">
+                        <img src="../proj3Output/SecondPart/B4/mosaic_1_auto.png" alt="Backyard Automatic Mosaic">
+                        <p>Automatic Mosaic (Part B)</p>
+                    </div>
+                </div>
+                <div class="gallery gallery-1-col">
+                    <div class="gallery-item">
+                        <img src="../proj3Output/SecondPart/B4/result_1_backyard.png" alt="Backyard Automatic Result">
+                        <p><strong>RANSAC Analysis:</strong> 498 initial matches -> 142/150 (94.7%) inliers found.</p>
+                    </div>
+                </div>
+
+                <h4>Kitchen: Manual vs. Automatic</h4>
+                <div class="gallery gallery-2-col">
+                    <div class="gallery-item">
+                        <img src="../proj3Output/SecondPart/B4/mosaic_2_manual.png" alt="Kitchen Manual Mosaic">
+                        <p>Manual Mosaic (Part A)</p>
+                    </div>
+                    <div class="gallery-item">
+                        <img src="../proj3Output/SecondPart/B4/mosaic_2_auto.png" alt="Kitchen Automatic Mosaic">
+                        <p>Automatic Mosaic (Part B)</p>
+                    </div>
+                </div>
+                <div class="gallery gallery-1-col">
+                    <div class="gallery-item">
+                        <img src="../proj3Output/SecondPart/B4/result_2_kitchen.png" alt="Kitchen Automatic Result">
+                        <p><strong>RANSAC Analysis:</strong> 334 initial matches -> 85/150 (56.7%) inliers found.</p>
+                    </div>
+                </div>
+
+                <h4>Backyard Grill: Manual vs. Automatic</h4>
+                <div class="gallery gallery-2-col">
+                    <div class="gallery-item">
+                        <img src="../proj3Output/SecondPart/B4/mosaic_3_manual.png" alt="Backyard Grill Manual Mosaic">
+                        <p>Manual Mosaic (Part A)</p>
+                    </div>
+                    <div class="gallery-item">
+                        <img src="../proj3Output/SecondPart/B4/mosaic_3_backyard_auto.png"
+                            alt="Backyard Grill Automatic Mosaic">
+                        <p>Automatic Mosaic (Part B)</p>
+                    </div>
+                </div>
+                <div class="gallery gallery-1-col">
+                    <div class="gallery-item">
+                        <img src="../proj3Output/SecondPart/B4/result_3_backyard_grill.png"
+                            alt="Backyard Grill Automatic Result">
+                        <p><strong>RANSAC Analysis:</strong> 96 initial matches -> 76/96 (79.2%) inliers found.</p>
+                    </div>
                 </div>
             </div>
 
-            <h4>Mosaic 3: Backyard Grill</h4>
-            <div class="gallery gallery-3-col">
-                <div class="gallery-item">
-                    <img src="../proj3Output/A4/mosaic_3_backyard_grill.png" alt="Backyard Grill Mosaic">
-                    <p>Final Blended Mosaic</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>Conclusion</h2>
-            <p>
-                This project was a deep dive into the geometric transformations that underpin computational photography
-                tasks like panorama stitching. Implementing the entire pipeline from scratch, from computing
-                homographies with least squares to writing my own image warping and interpolation functions, provided a
-                solid understanding of the theory. The most satisfying part was seeing the final mosaics come together,
-                where distinct images seamlessly merged into a single, cohesive panorama. It highlighted how a series of
-                well-defined mathematical and algorithmic steps can create a result that is both technically impressive
-                and artistically pleasing.
-            </p>
         </div>
 
     </div>
+
+    <script>
+        function showTab(tabName) {
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => {
+                content.classList.remove('active');
+            });
+
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+            });
+
+            document.getElementById(tabName).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+    </script>
 </body>
 
 </html>
