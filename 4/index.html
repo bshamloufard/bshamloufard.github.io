@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project 4 - Neural Radiance Fields (NeRF)</title>
+    <link rel="stylesheet" href="../print.css" media="print">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body,
+        html {
+            height: 100%;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            background-color: #1a1a1a;
+            color: white;
+            font-family: 'Georgia', serif;
+        }
+
+        /* Video Background */
+        #video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            object-fit: cover;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        /* Content */
+        .content {
+            position: relative;
+            z-index: 1;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+            font-size: 1.1rem;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav a:hover {
+            opacity: 0.7;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 8rem 0 4rem;
+        }
+
+        .header h1 {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+
+        .header p {
+            font-size: 1.5rem;
+            max-width: 1000px;
+            margin: 0 auto;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        /* Section */
+        .section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h2,
+        h3,
+        h4 {
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            margin-bottom: 1rem;
+        }
+
+        h2 {
+            font-size: 2.8rem;
+            text-align: center;
+            color: #ffd700;
+        }
+
+        h3 {
+            font-size: 2.2rem;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.5);
+            padding-bottom: 0.5rem;
+        }
+
+        h4 {
+            font-size: 1.8rem;
+            color: #f0f0f0;
+        }
+
+        p {
+            font-size: 1.2rem;
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        ul,
+        ol {
+            font-size: 1.2rem;
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+            margin-left: 2rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Gallery */
+        .gallery {
+            display: grid;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .gallery-1-col {
+            grid-template-columns: 1fr;
+        }
+
+        .gallery-2-col {
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        }
+
+        .gallery-3-col {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+        .gallery-4-col {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+
+        .gallery-5-col {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+
+        .gallery-item {
+            text-align: center;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .gallery-item img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6);
+        }
+
+        .gallery-item p {
+            margin-top: 0.8rem;
+            font-style: italic;
+            font-size: 1rem;
+            color: #ccc;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* Code Blocks */
+        pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #f0f0f0;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+            overflow-x: auto;
+        }
+
+        code {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1rem;
+        }
+
+        /* Emphasis boxes */
+        .highlight-box {
+            background: rgba(255, 215, 0, 0.1);
+            border-left: 4px solid #ffd700;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .highlight-box p {
+            margin-bottom: 0;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th,
+        td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        th {
+            background: rgba(255, 215, 0, 0.2);
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* GIF specific styling */
+        .gif-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .gif-container img {
+            width: 100%;
+            height: auto;
+        }
+    </style>
+    <script>
+        // Force GIFs to loop infinitely by reloading them periodically
+        document.addEventListener('DOMContentLoaded', function () {
+            const gifs = document.querySelectorAll('.gif-container img');
+            gifs.forEach(gif => {
+                const originalSrc = gif.src;
+
+                // Function to reload the GIF
+                function reloadGif() {
+                    // Add timestamp to force reload and avoid caching
+                    const timestamp = new Date().getTime();
+                    gif.src = originalSrc.split('?')[0] + '?t=' + timestamp;
+                }
+
+                // Reload GIF every 3 seconds (adjust based on your GIF duration)
+                // Most NeRF novel view GIFs are 2-4 seconds long
+                setInterval(reloadGif, 3000);
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <video id="video-background" autoplay muted loop>
+        <source src="../fixedTranquil.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <div class="content">
+        <nav class="nav">
+            <a href="../index.html">← Back to Portfolio</a>
+        </nav>
+
+        <div class="header">
+            <h1>Project 4: Neural Radiance Fields (NeRF)</h1>
+            <p>
+                Building a complete Neural Radiance Field pipeline from scratch: camera calibration with ArUco markers,
+                2D neural field warm-up, and full 3D volumetric scene reconstruction from multi-view images. Training
+                on both synthetic Lego data and my own captured bread dataset to generate photorealistic novel views.
+            </p>
+        </div>
+
+        <!-- Part 0: Camera Calibration -->
+        <div class="section">
+            <h2>Part 0: Camera Calibration and 3D Scanning</h2>
+            <p>
+                The foundation of NeRF is accurate camera geometry. In this part, I implement a complete camera
+                calibration pipeline using ArUco markers to estimate camera intrinsics and extrinsics, then capture and
+                process my own 3D object scan for training.
+            </p>
+
+            <h3>Part 0.1 & 0.2: Camera Calibration</h3>
+            <p>
+                I captured 30-50 calibration images of ArUco markers from a 4×4 dictionary containing 50 unique
+                markers, varying both camera angle and distance to ensure robust calibration. The
+                <code>calibrate_camera_aruco()</code> function implements marker detection using OpenCV's
+                <code>cv2.aruco.detectMarkers()</code> with carefully tuned detection parameters. I configure the
+                adaptive thresholding window size to range from a minimum of 3 to a maximum of 23 pixels with a step
+                size of 10, and enable contour-based corner refinement using <code>CORNER_REFINE_CONTOUR</code> for
+                sub-pixel accuracy.
+            </p>
+
+            <p>
+                For each detected marker, I establish 3D-to-2D point correspondences by defining the physical marker
+                corners on the z=0 plane with <code>TAG_SIZE_M = 0.02</code> meters (2cm squares), and matching them to
+                their detected 2D pixel coordinates in the image. After accumulating these correspondences across all
+                calibration images—handling cases where markers aren't detected by skipping those frames—I call
+                <code>cv2.calibrateCamera()</code> to solve for the camera intrinsic matrix and lens distortion
+                coefficients using least-squares optimization.
+            </p>
+
+            <div class="highlight-box">
+                <p><strong>Calibration Results:</strong> Achieved an RMS reprojection error of <strong>0.4901
+                        pixels</strong>, indicating excellent calibration quality. The computed
+                    <code>camera_matrix</code> shows focal lengths <code>fx=1594.0945</code> and
+                    <code>fy=1596.4933</code> pixels, with principal point at <code>(cx=592.6713, cy=789.7637)</code>.
+                    This low reprojection error validates that my detected markers accurately align with their
+                    projected positions using the recovered intrinsics.
+                </p>
+            </div>
+
+            <h3>Part 0.3: Estimating Camera Pose</h3>
+            <p>
+                Next, I captured 50 images of my bread object positioned next to a single ArUco marker. Using the
+                calibrated intrinsics from Part 0.1, my <code>estimate_poses()</code> function solves the classic
+                Perspective-n-Point (PnP) problem for each image to recover the camera's position and orientation. I
+                define the marker's 3D corner coordinates centered at the world origin by computing
+                <code>half = TAG_SIZE_M / 2.0</code>, then creating a 4×3 array with corners at: top-left (-half, +half,
+                0), top-right (+half, +half, 0), bottom-right (+half, -half, 0), and bottom-left (-half, -half, 0), all
+                lying flat on the z=0 plane.
+            </p>
+
+            <p>
+                For each detected marker, I call <code>cv2.solvePnP()</code> using the
+                <code>SOLVEPNP_IPPE_SQUARE</code> flag which is optimized for planar square targets, providing both the
+                rotation vector <code>rvec</code> and translation vector <code>tvec</code>. Since
+                <code>solvePnP()</code> returns the world-to-camera transformation, I must invert it to get
+                camera-to-world for NeRF. I first convert <code>rvec</code> to a 3×3 rotation matrix using
+                <code>cv2.Rodrigues()</code>, construct the 4×4 world-to-camera matrix by placing the rotation in the
+                upper-left 3×3 block and translation in the first three elements of the fourth column, then compute
+                <code>c2w</code> as the inverse of this matrix cast to float32 for GPU compatibility.
+            </p>
+
+            <div class="highlight-box">
+                <p><strong>Pose Estimation Results:</strong> Successfully estimated poses for all <strong>50/50
+                        images</strong>. Camera positions span from -0.119m to 0.120m along the X-axis, -0.115m to
+                    0.151m along Y, and 0.077m to 0.188m along Z, with a mean camera position at [-0.006, 0.010, 0.131]
+                    meters from the ArUco tag origin. The maximum distance of any camera from the origin is 0.216
+                    meters, confirming my capture strategy of maintaining consistent distance while varying viewpoint
+                    angles.</p>
+            </div>
+
+            <h3>Part 0.4: Visualization with Viser</h3>
+            <p>
+                I visualize the estimated camera poses in 3D space using the Viser library. The
+                <code>visualize_cameras()</code> function renders each camera as a frustum with its corresponding
+                captured image as a thumbnail. To ensure the frustums are visible regardless of scene scale, I
+                automatically compute an appropriate <code>frustum_scale</code> by taking the maximum of 0.02 or 15% of
+                the camera cloud's maximum radius from the origin. I also add a ground grid on the XZ plane and
+                coordinate axes at the world origin to provide spatial reference. For each camera, I use
+                <code>server.scene.add_camera_frustum()</code> with field-of-view calculated from the intrinsics as
+                <code>2.0 * np.arctan2(H / 2.0, fx)</code>, the aspect ratio as <code>W / H</code>, and the camera
+                orientation converted to quaternion format using
+                <code>viser.transforms.SO3.from_matrix(c2w[:3, :3]).wxyz</code>, with position extracted from
+                <code>c2w[:3, 3]</code>.
+            </p>
+
+            <div class="gallery gallery-3-col">
+                <div class="gallery-item">
+                    <img src="../project4Output/Part0/1.png" alt="Camera Frustums View 1">
+                    <p>Camera Frustums - Overhead View</p>
+                </div>
+                <div class="gallery-item">
+                    <img src="../project4Output/Part0/2.png" alt="Camera Frustums View 2">
+                    <p>Camera Frustums - Side View with Grid</p>
+                </div>
+                <div class="gallery-item">
+                    <img src="../project4Output/Part0/3.png" alt="Camera Frustums View 3">
+                    <p>Camera Frustums - Angled View Showing Distribution</p>
+                </div>
+            </div>
+
+            <h3>Part 0.5: Dataset Creation</h3>
+            <p>
+                Finally, the <code>create_nerf_dataset()</code> function undistorts all captured images and packages
+                them into the standardized format expected by NeRF training code. To minimize black borders that appear
+                after lens undistortion, I first call <code>cv2.getOptimalNewCameraMatrix()</code> with
+                <code>alpha=0</code> to compute both a new intrinsics matrix <code>new_K</code> and a region-of-interest
+                <code>roi</code> that maximally crops out invalid pixels. I then undistort each image using
+                <code>cv2.undistort()</code> with the original <code>camera_matrix</code>, <code>dist_coeffs</code>, and
+                <code>new_K</code>, followed by cropping to the valid ROI region defined by
+                <code>(x, y, w_roi, h_roi)</code>. Critically, after cropping I must update the principal point in
+                <code>new_K</code> by subtracting the crop offsets: <code>new_K[0, 2] -= x</code> for the x-coordinate
+                and <code>new_K[1, 2] -= y</code> for the y-coordinate, since the coordinate system origin has shifted.
+            </p>
+
+            <p>
+                I split the 50 successfully posed images into training, validation, and test sets using an 80/10/10
+                ratio with <code>random.seed(42)</code> for reproducibility, resulting in 40 training images, 5
+                validation images, and 5 test poses. The final dataset is saved as <code>bread_nerf_dataset.npz</code>
+                (258.8 MB) using <code>np.savez()</code> with the following structure: <code>images_train</code> and
+                <code>images_val</code> as uint8 arrays in [0, 255] range with shape (N, H, W, 3);
+                <code>c2ws_train</code>, <code>c2ws_val</code>, and <code>c2ws_test</code> as float32 4×4
+                camera-to-world transformation matrices; and <code>focal</code> as a single float32 value of 1594.094
+                pixels extracted from <code>new_K[0, 0]</code>. Note that test images are not included—only their camera
+                poses—as these will be used to render novel views after training.
+            </p>
+        </div>
+
+        <!-- Part 1: 2D Neural Field -->
+        <div class="section">
+            <h2>Part 1: Neural Field for 2D Images</h2>
+            <p>
+                Before tackling 3D NeRF, I warm up with a simpler 2D version: fitting a neural network to represent an
+                image as a continuous function f(x,y) → RGB. This introduces key concepts like positional encoding and
+                gradient-based optimization.
+            </p>
+
+            <h3>Model Architecture</h3>
+            <p>
+                My <code>NeuralField2D</code> model consists of:
+            </p>
+            <ol>
+                <li><strong>Positional Encoding (PE):</strong> Transforms 2D coordinates (x,y) ∈ [0,1] using
+                    sinusoidal functions at L frequency levels. For input x and max frequency L:
+                    <pre><code>PE(x) = [x, sin(2⁰πx), cos(2⁰πx), ..., sin(2^(L-1)πx), cos(2^(L-1)πx)]</code></pre>
+                    Output dimension: <code>2 + 4L</code> (for L=10: 42 dimensions)
+                </li>
+                <li><strong>MLP Network:</strong> 3-layer architecture with ReLU activations:
+                    <pre><code>Input (2D) → PE (42D) → Linear(42→W) → ReLU 
+           → Linear(W→W) → ReLU
+           → Linear(W→W) → ReLU
+           → Linear(W→3) → Sigmoid → RGB</code></pre>
+                    Where W is the layer width (e.g., 256)
+                </li>
+            </ol>
+
+            <h4>Key Parameters</h4>
+            <table>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Value</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>Learning Rate</td>
+                    <td>1e-2</td>
+                    <td>Adam optimizer</td>
+                </tr>
+                <tr>
+                    <td>Batch Size</td>
+                    <td>10,000</td>
+                    <td>Random pixels per iteration</td>
+                </tr>
+                <tr>
+                    <td>Iterations</td>
+                    <td>2,000</td>
+                    <td>Training steps</td>
+                </tr>
+                <tr>
+                    <td>Loss Function</td>
+                    <td>MSE</td>
+                    <td>Mean Squared Error</td>
+                </tr>
+                <tr>
+                    <td>Device</td>
+                    <td>MPS</td>
+                    <td>Apple Metal GPU acceleration</td>
+                </tr>
+            </table>
+
+            <h3>Training Results: Fox Image (1024×689)</h3>
+            <p>
+                With the default configuration (L=10, W=256, 143,363 parameters), I achieved excellent reconstruction
+                quality on the provided fox image. Training progressed rapidly in the first 500 iterations (PSNR: 9.07
+                → 25.39 dB) then refined details through iteration 2000 (final PSNR: 26.41 dB).
+            </p>
+
+            <div class="gallery gallery-2-col">
+                <div class="gallery-item">
+                    <img src="../project4Output/PartOne/Main/fox_training_progression.png"
+                        alt="Fox Training Progression">
+                    <p>Fox Training Progression: Iterations 0, 500, 1000, 1500, 2000</p>
+                </div>
+                <div class="gallery-item">
+                    <img src="../project4Output/PartOne/Main/fox_l10_w256_psnr_curve.png" alt="Fox PSNR Curve">
+                    <p>PSNR Curve: Final 26.41 dB after 2000 iterations (~131 iter/sec)</p>
+                </div>
+            </div>
+
+            <h3>Custom Image: Messi (1283×1547)</h3>
+            <p>
+                I trained on a larger custom image (Messi with World Cup trophy) using the same hyperparameters. The
+                larger resolution (1,984,201 pixels vs 705,536 for fox) resulted in slower training speed (~96
+                iter/sec) but achieved even higher final quality (PSNR: 27.89 dB).
+            </p>
+
+            <div class="gallery gallery-2-col">
+                <div class="gallery-item">
+                    <img src="../project4Output/PartOne/Main/messi_training_progression.png"
+                        alt="Messi Training Progression">
+                    <p>Messi Training Progression: Clear facial features and trophy details emerge</p>
+                </div>
+                <div class="gallery-item">
+                    <img src="../project4Output/PartOne/Main/messi_l10_w256_psnr_curve.png" alt="Messi PSNR Curve">
+                    <p>PSNR Curve: Final 27.89 dB (higher than fox due to more pixels)</p>
+                </div>
+            </div>
+
+            <h3>Hyperparameter Ablation Study</h3>
+            <p>
+                I conducted a systematic grid search over frequency levels L ∈ {2, 10} and network width W ∈ {64,
+                256} to understand their impact on reconstruction quality.
+            </p>
+
+            <h4>Fox Image Results</h4>
+            <div class="gallery gallery-1-col">
+                <div class="gallery-item">
+                    <img src="../project4Output/PartOne/Main/fox_2x2.png" alt="Fox Hyperparameter Comparison">
+                    <p>2×2 Grid: (Top-Left) L=2,W=64 22.37dB, (Top-Right) L=2,W=256 23.57dB, (Bottom-Left) L=10,W=64
+                        25.18dB, (Bottom-Right) L=10,W=256 26.58dB</p>
+                </div>
+            </div>
+
+            <table>
+                <tr>
+                    <th>Config</th>
+                    <th>L (Frequency)</th>
+                    <th>W (Width)</th>
+                    <th>Parameters</th>
+                    <th>Final PSNR</th>
+                    <th>Quality Assessment</th>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>2</td>
+                    <td>64</td>
+                    <td>9,219</td>
+                    <td>22.37 dB</td>
+                    <td>Blurry, oversmoothed - cannot capture fur texture</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>2</td>
+                    <td>256</td>
+                    <td>135,171</td>
+                    <td>23.57 dB</td>
+                    <td>Smooth but lacks detail - whiskers blurred</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>10</td>
+                    <td>64</td>
+                    <td>11,267</td>
+                    <td>25.18 dB</td>
+                    <td>Sharp edges, some artifacts from limited capacity</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>10</td>
+                    <td>256</td>
+                    <td>143,363</td>
+                    <td>26.58 dB</td>
+                    <td><strong>Best quality</strong> - sharp details, smooth gradients</td>
+                </tr>
+            </table>
+
+            <h4>Messi Image Results</h4>
+            <div class="gallery gallery-1-col">
+                <div class="gallery-item">
+                    <img src="../project4Output/PartOne/Main/messi_2x2.png" alt="Messi Hyperparameter Comparison">
+                    <p>2×2 Grid: Shows even more dramatic differences on complex image with jersey text and trophy
+                        details</p>
+                </div>
+            </div>
+
+            <table>
+                <tr>
+                    <th>Config</th>
+                    <th>L (Frequency)</th>
+                    <th>W (Width)</th>
+                    <th>Final PSNR</th>
+                    <th>Quality Assessment</th>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>2</td>
+                    <td>64</td>
+                    <td>19.81 dB</td>
+                    <td>Very blurry - trophy details completely lost</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>2</td>
+                    <td>256</td>
+                    <td>21.63 dB</td>
+                    <td>Smoother but still blurry - jersey text illegible</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>10</td>
+                    <td>64</td>
+                    <td>24.32 dB</td>
+                    <td>Good detail but slight artifacts in smooth areas</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>10</td>
+                    <td>256</td>
+                    <td>27.89 dB</td>
+                    <td><strong>Excellent quality</strong> - crisp facial features, readable jersey</td>
+                </tr>
+            </table>
+
+            <div class="highlight-box">
+                <p><strong>Key Insight:</strong> Positional encoding frequency (L) is the dominant factor for
+                    capturing high-frequency details like texture and edges. Network width (W) provides capacity but
+                    cannot compensate for insufficient frequency coverage. The optimal combination (L=10, W=256)
+                    achieves
+                    a 4-7 dB PSNR improvement over low configurations.</p>
+            </div>
+        </div>
+
+        <!-- Part 2: 3D NeRF -->
+        <div class="section">
+            <h2>Part 2: Neural Radiance Field from Multi-view Images</h2>
+            <p>
+                Now I extend my neural field to 3D, implementing a complete NeRF pipeline that learns volumetric scene
+                representations from multi-view 2D images. This involves ray generation, 3D point sampling, volume
+                rendering, and training on the Lego dataset.
+            </p>
+
+            <h3>Part 2.1: Ray Generation from Camera Parameters</h3>
+            <p>
+                To render an image with NeRF, I must cast rays from the camera through each pixel. My implementation
+                consists of three core functions that handle coordinate transformations. The
+                <code>transform(c2w, x_c)</code> function converts points from camera space to world space by first
+                appending ones to create homogeneous coordinates <code>x_c_hom</code>, then multiplying by the 4×4
+                camera-to-world matrix <code>c2w</code>, and finally dividing by the homogeneous coordinate to return
+                the 3D world positions. This matrix multiplication efficiently handles both the rotation (upper-left 3×3
+                block of <code>c2w</code>) and translation (rightmost column) in a single operation.
+            </p>
+
+            <p>
+                The <code>pixel_to_camera(K, uv, s)</code> function performs the inverse of the pinhole projection,
+                unprojecting 2D pixel coordinates back to 3D camera space. Given the intrinsics matrix <code>K</code>
+                containing focal lengths <code>fx</code> and <code>fy</code> plus principal point <code>(cx, cy)</code>,
+                I compute its inverse <code>K_inv</code> once, then convert pixel coordinates to homogeneous form by
+                appending ones, multiply by <code>K_inv</code>, and scale by depth <code>s</code>. For ray direction
+                computation, I use <code>s=1.0</code> to get unit-depth points.
+            </p>
+
+            <p>
+                Finally, <code>pixel_to_ray(K, c2w, uv)</code> combines these operations to generate rays. For each
+                pixel coordinate, I first add 0.5 to shift from the pixel corner to its center
+                (<code>uv_centered = uv + 0.5</code>)—a critical detail for proper alignment. I then unproject to
+                camera space at unit depth, transform to world space using my <code>transform()</code> function, and
+                compute the ray. The ray origin <code>ray_o</code> is simply the camera position extracted from
+                <code>c2w[:3, 3]</code>, while the direction <code>ray_d</code> is the normalized vector from
+                <code>ray_o</code> to the unprojected world point, computed by
+                <code>(x_w - ray_o) / norm(x_w - ray_o)</code>.
+            </p>
+
+            <h3>Part 2.2: Sampling Points Along Rays</h3>
+            <p>
+                My <code>sample_along_rays()</code> function discretizes each ray into <code>n_samples</code> 3D points
+                distributed between the <code>near</code> and <code>far</code> depth planes. The simplest approach would
+                be uniform sampling using <code>torch.linspace(near, far, n_samples)</code> to create evenly-spaced
+                depth values <code>t_vals</code>, but this would lead to overfitting as the network would only see
+                points at fixed locations. Instead, I implement stratified sampling when <code>perturb=True</code>
+                during training: I divide the depth range into <code>n_samples</code> bins, compute bin midpoints as
+                <code>t_mids = 0.5 * (t_vals[1:] + t_vals[:-1])</code>, then construct upper and lower bin boundaries by
+                concatenating the first depth value with midpoints (for <code>t_lower</code>) and midpoints with the
+                final depth value (for <code>t_upper</code>). I add uniformly random jitter within each bin by sampling
+                <code>t_rand</code> and computing the final perturbed depths as
+                <code>t_vals = t_lower + t_rand * (t_upper - t_lower)</code>.
+            </p>
+
+            <p>
+                The actual 3D sample positions are computed using the ray equation:
+                <code>points = rays_o[:, None, :] + rays_d[:, None, :] * t_vals[:, :, None]</code>, which broadcasts the
+                ray origins and directions with the depth values to produce a tensor of shape (N_rays, n_samples, 3).
+                For the Lego synthetic dataset, I use <code>near=2.0, far=6.0, n_samples=64</code>, while my custom
+                bread dataset requires tighter bounds <code>near=0.001, far=0.5</code> (1mm to 50cm) with increased
+                sampling density <code>n_samples=128</code> to capture the closer, more detailed real-world scene.
+            </p>
+
+            <h3>Part 2.3: Efficient Dataloader with Precomputed Rays</h3>
+            <p>
+                Computing rays on-the-fly during training would be prohibitively slow, requiring thousands of matrix
+                operations per iteration. My <code>RaysData</code> class solves this by precomputing all rays for every
+                pixel in every training image once during initialization. In the <code>__init__</code> method, I iterate
+                through each image and generate a complete H×W pixel grid using <code>torch.meshgrid</code> with
+                <code>indexing='xy'</code> to create coordinate arrays <code>uu</code> and <code>vv</code>, then flatten
+                and stack them into a (H×W, 2) array of pixel coordinates <code>uv</code>. For each image's pixel grid,
+                I call my <code>pixel_to_ray(K, c2ws[i], uv)</code> function to compute all ray origins and directions
+                simultaneously, and extract the corresponding pixel colors by indexing into the image tensor using
+                <code>images[i, vv.long(), uu.long()]</code>. I accumulate these in lists <code>self.rays_o</code>,
+                <code>self.rays_d</code>, and <code>self.pixels</code>, then concatenate them with
+                <code>torch.cat()</code> to create unified tensors containing all rays from all images.
+            </p>
+
+            <p>
+                The <code>sample_rays(n_rays)</code> method enables efficient batch sampling by generating random
+                indices with <code>torch.randint(0, self.N_total, (n_rays,))</code> and using advanced indexing to
+                retrieve the corresponding ray origins, directions, and ground-truth pixel colors. This memory-for-speed
+                tradeoff requires approximately N_images × H × W × 6 floats (6 values per ray: 3 for origin, 3 for
+                direction). For my bread dataset with 40 training images at 200×200 resolution, this is 1.6 million rays
+                × 24 bytes = 38.4 MB—trivial modern GPU memory that delivers a 10-100× speedup by eliminating repeated
+                ray computation.
+            </p>
+
+            <h4>Visualization: Rays and Samples</h4>
+            <p>
+                Before training, I visualize the ray sampling to verify correctness. The images show 100 randomly
+                sampled rays with 64 sample points along each ray (in white), overlaid on camera frustums.
+            </p>
+
+            <div class="gallery gallery-3-col">
+                <div class="gallery-item">
+                    <img src="../project4Output/Part2/Part2.3/1.png" alt="Rays Visualization 1">
+                    <p>All camera frustums with 100 sampled rays</p>
+                </div>
+                <div class="gallery-item">
+                    <img src="../project4Output/Part2/Part2.3/2.png" alt="Rays Visualization 2">
+                    <p>Close-up showing ray directions and sample points</p>
+                </div>
+                <div class="gallery-item">
+                    <img src="../project4Output/Part2/Part2.3/3.png" alt="Rays Visualization 3">
+                    <p>Sample distribution along rays (near=2.0, far=6.0)</p>
+                </div>
+            </div>
+
+            <h3>Part 2.4: NeRF Network Architecture</h3>
+            <p>
+                My NeRF network predicts both density σ and view-dependent color RGB for each 3D point in space. The key
+                architectural differences from the 2D neural field are: the input now consists of 3D world coordinates
+                plus 3D view direction (both positionally encoded), the output includes not just RGB ∈ [0,1]
+                (constrained by Sigmoid) but also density σ ≥ 0 (enforced by ReLU), the network is deeper with 8 layers
+                instead of 3 to handle 3D complexity, and I inject a skip connection at layer 4 to prevent vanishing
+                gradients for the position information.
+            </p>
+
+            <p>
+                In my <code>NeRF</code> class initialization, I set <code>hidden_dim=256</code> for Lego and
+                <code>hidden_dim=512</code> for my custom bread scene (real scenes need more capacity). I configure
+                <code>n_layers=8</code> for network depth and set <code>self.inject_layer = n_layers // 2</code> to
+                inject the skip connection at layer 4. The position encoding uses <code>L_pos=10</code> (or 12 for
+                bread) to expand 3D coordinates into <code>pos_dim = 3 * (2*L_pos + 1) = 63</code> dimensions, while
+                direction encoding uses <code>L_dir=4</code> to produce <code>dir_dim = 3 * (2*L_dir + 1) = 27</code>
+                dimensions. I create separate <code>PositionalEncoding</code> instances for positions and directions,
+                then build the position processing layers in a loop where the first layer takes <code>pos_dim</code>
+                input and subsequent layers take <code>hidden_dim</code>, except at <code>self.inject_layer</code> where
+                I increase <code>in_dim</code> by <code>pos_dim</code> to concatenate the original encoded position.
+                Finally, I define a <code>density_head</code> as a single linear layer mapping
+                <code>hidden_dim → 1</code>, and a <code>color_head</code> as a sequential module taking concatenated
+                features and encoded direction (<code>hidden_dim + dir_dim</code>), passing through
+                <code>hidden_dim // 2</code> with ReLU, then outputting 3 RGB values with Sigmoid.
+            </p>
+
+            <p>
+                In the <code>forward</code> method, I first encode the input <code>points</code> and
+                <code>directions</code> using <code>self.pos_encoder</code> and <code>self.dir_encoder</code> to get
+                <code>x</code> and <code>d</code>. I then process through my position layers, checking at each layer
+                <code>i</code> if <code>i == self.inject_layer</code> and concatenating the original <code>x</code> with
+                current <code>features</code> using <code>torch.cat</code> before applying <code>F.relu</code>. After
+                the position processing layers, I predict density by passing features through
+                <code>self.density_head</code> with ReLU activation
+                (<code>sigma = F.relu(self.density_head(features))</code>), and predict color by concatenating features
+                with encoded direction and passing through <code>self.color_head</code>
+                (<code>rgb = self.color_head(torch.cat([features, d], dim=1))</code>). This architecture results in
+                approximately 2.13M parameters for Lego and 8.5M parameters for my bread dataset.
+            </p>
+
+            <h3>Part 2.5: Volume Rendering</h3>
+            <p>
+                The classical volume rendering equation accumulates color along each ray using density and
+                transmittance, following C(r) = Σᵢ Tᵢ · αᵢ · cᵢ, where αᵢ represents the opacity of sample i, Tᵢ is the
+                transmittance (probability that light reaches sample i without being absorbed), and cᵢ is the color at
+                that sample. My <code>volrend(sigmas, rgbs, step_size)</code> function implements this discrete
+                approximation in three steps. First, I compute the opacity values <code>alphas</code> using the formula
+                <code>alphas = 1 - torch.exp(-sigmas * step_size)</code>, where high density leads to high opacity that
+                blocks light, and low density allows light to pass through. The <code>step_size</code> parameter is the
+                distance between samples, calculated as <code>(far - near) / n_samples</code> (e.g., (6.0-2.0)/64 =
+                0.0625 for Lego).
+            </p>
+
+            <p>
+                Second, I compute transmittance using cumulative products. I calculate
+                <code>ones_minus_alpha = 1 - alphas</code> to get transparency at each sample, then apply
+                <code>torch.cumprod(ones_minus_alpha + 1e-10, dim=1)</code> along the ray dimension to accumulate how
+                much light survives to each point (the 1e-10 prevents numerical instability from zeros). Since the first
+                sample has no occlusion yet, I prepend ones using
+                <code>torch.cat([torch.ones_like(transmittance_cumprod[:, :1]), transmittance_cumprod[:, :-1]], dim=1)</code>,
+                effectively shifting the cumulative product so each sample's transmittance represents the probability of
+                reaching that point. Finally, I compute per-sample weights as
+                <code>weights = transmittance * alphas</code>, representing each sample's contribution to the final
+                pixel color, and perform the weighted sum
+                <code>rendered_colors = torch.sum(weights * rgbs, dim=1)</code> to accumulate all contributions into a
+                single (B, 3) RGB output. My implementation passes the provided validation test case with random
+                densities and colors, matching expected output within 1e-4 tolerance.
+            </p>
+
+            <h3>Training on Lego Dataset (200×200)</h3>
+            <p>
+                I train on the synthetic Lego bulldozer scene with 100 training images captured on a spherical
+                trajectory. Training hyperparameters:
+            </p>
+
+            <table>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Value</th>
+                    <th>Notes</th>
+                </tr>
+                <tr>
+                    <td>Network Width</td>
+                    <td>256</td>
+                    <td>hidden_dim for all layers</td>
+                </tr>
+                <tr>
+                    <td>Network Depth</td>
+                    <td>8 layers</td>
+                    <td>Position processing MLP</td>
+                </tr>
+                <tr>
+                    <td>Position PE</td>
+                    <td>L=10</td>
+                    <td>10 frequency levels → 63D encoding</td>
+                </tr>
+                <tr>
+                    <td>Direction PE</td>
+                    <td>L=4</td>
+                    <td>4 frequency levels → 27D encoding</td>
+                </tr>
+                <tr>
+                    <td>Scene Bounds</td>
+                    <td>near=2.0, far=6.0</td>
+                    <td>Lego-specific depth range</td>
+                </tr>
+                <tr>
+                    <td>Samples/Ray</td>
+                    <td>64</td>
+                    <td>Stratified sampling with perturbation</td>
+                </tr>
+                <tr>
+                    <td>Rays/Iteration</td>
+                    <td>16,384</td>
+                    <td>Batch size for training</td>
+                </tr>
+                <tr>
+                    <td>Learning Rate</td>
+                    <td>5e-4</td>
+                    <td>Adam optimizer</td>
+                </tr>
+                <tr>
+                    <td>Total Iterations</td>
+                    <td>3,000</td>
+                    <td>~15-20 minutes on GPU</td>
+                </tr>
+                <tr>
+                    <td>Mixed Precision</td>
+                    <td>Enabled</td>
+                    <td>AMP for 2× speedup</td>
+                </tr>
+            </table>
+
+            <h4>Training Progression</h4>
+            <div class="gallery gallery-2-col">
+                <div class="gallery-item full-width">
+                    <img src="../project4Output/Part2/Part2.5/lego_training_curves.png" alt="Lego Training Curves">
+                    <p>Training and Validation Loss/PSNR Curves: Achieved >25 dB PSNR</p>
+                </div>
+            </div>
+
+            <div class="gallery gallery-4-col">
+                <div class="gallery-item">
+                    <img src="../project4Output/Part2/Part2.5/lego_iter_00100.png" alt="Lego Iter 100">
+                    <p>Iteration 100: Basic shapes emerging</p>
+                </div>
+                <div class="gallery-item">
+                    <img src="../project4Output/Part2/Part2.5/lego_iter_00250.png" alt="Lego Iter 250">
+                    <p>Iteration 250: Structure defined</p>
+                </div>
+                <div class="gallery-item">
+                    <img src="../project4Output/Part2/Part2.5/lego_iter_00500.png" alt="Lego Iter 500">
+                    <p>Iteration 500: Details appearing</p>
+                </div>
+                <div class="gallery-item">
+                    <img src="../project4Output/Part2/Part2.5/lego_iter_01000.png" alt="Lego Iter 1000">
+                    <p>Iteration 1000: Clear edges</p>
+                </div>
+                <div class="gallery-item">
+                    <img src="../project4Output/Part2/Part2.5/lego_iter_01500.png" alt="Lego Iter 1500">
+                    <p>Iteration 1500: Refined textures</p>
+                </div>
+                <div class="gallery-item">
+                    <img src="../project4Output/Part2/Part2.5/lego_iter_02000.png" alt="Lego Iter 2000">
+                    <p>Iteration 2000: Sharp details</p>
+                </div>
+                <div class="gallery-item">
+                    <img src="../project4Output/Part2/Part2.5/lego_iter_03000.png" alt="Lego Iter 3000">
+                    <p>Iteration 3000: Final quality</p>
+                </div>
+            </div>
+
+            <h4>Novel View Synthesis</h4>
+            <p>
+                Using the trained model, I render a 360° spherical trajectory around the Lego bulldozer using the
+                provided test camera poses. The <code>render_image()</code> function generates each frame by casting
+                rays through all pixels, sampling points, querying the network, and volume rendering:
+            </p>
+
+            <div class="gif-container">
+                <img src="../project4Output/Part2/Part2.5/lego_novel_views.gif" alt="Lego Novel Views">
+                <p style="text-align: center; font-style: italic; margin-top: 1rem; color: #ccc;">360° Spherical
+                    Rendering: Smooth novel views with consistent geometry and view-dependent specularities</p>
+            </div>
+        </div>
+
+        <!-- Part 2.6: Custom Dataset -->
+        <div class="section">
+            <h2>Part 2.6: Training NeRF on My Own Bread Dataset</h2>
+            <p>
+                Finally, I train a NeRF on the custom bread dataset created in Part 0. Real-world data presents
+                additional challenges: larger scene variation, potential calibration errors, and the need for careful
+                hyperparameter tuning.
+            </p>
+
+            <h3>Dataset Preprocessing</h3>
+            <p>
+                The original dataset at 2.0 GB with 1600×1200 images was too large for rapid experimentation, so I
+                created <code>resize_dataset_fixed.py</code> to downsample images to 266×200 while maintaining the
+                aspect ratio and correctly scaling camera intrinsics. The critical insight is that intrinsics must be
+                scaled independently for width and height to preserve camera geometry. I compute separate scale factors:
+                <code>scale_w = 266 / 1600 = 0.16625</code> for width and <code>scale_h = 200 / 1200 = 0.16667</code>
+                for height. Then I scale the intrinsics matrix <code>K</code> by multiplying the first row
+                (<code>fx</code> and <code>cx</code>) by <code>scale_w</code> and the second row (<code>fy</code> and
+                <code>cy</code>) by <code>scale_h</code>: <code>K[0, :] *= scale_w</code> and
+                <code>K[1, :] *= scale_h</code>. This independent scaling is critical for correct geometry—using a
+                single uniform scale factor would distort the focal lengths. The result is a 98.3 MB dataset that trains
+                4× faster with acceptable quality, making iterative experimentation practical.
+            </p>
+
+            <h3>Modified Hyperparameters for Real Scenes</h3>
+            <p>
+                Real-world scenes require different settings than synthetic data:
+            </p>
+
+            <table>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Lego (Synthetic)</th>
+                    <th>Bread (Real)</th>
+                    <th>Rationale</th>
+                </tr>
+                <tr>
+                    <td>Network Width</td>
+                    <td>256</td>
+                    <td><strong>512</strong></td>
+                    <td>Real scenes have more complexity</td>
+                </tr>
+                <tr>
+                    <td>Position PE (L)</td>
+                    <td>10</td>
+                    <td><strong>12</strong></td>
+                    <td>Capture finer surface details</td>
+                </tr>
+                <tr>
+                    <td>Scene Bounds</td>
+                    <td>near=2.0, far=6.0</td>
+                    <td><strong>near=0.001, far=0.5</strong></td>
+                    <td>Object much closer (10-50cm vs 2-6m)</td>
+                </tr>
+                <tr>
+                    <td>Samples/Ray</td>
+                    <td>64</td>
+                    <td><strong>128</strong></td>
+                    <td>Higher quality volume sampling</td>
+                </tr>
+                <tr>
+                    <td>Rays/Iteration</td>
+                    <td>16,384</td>
+                    <td><strong>5,000</strong></td>
+                    <td>Smaller batches for stability</td>
+                </tr>
+                <tr>
+                    <td>Learning Rate</td>
+                    <td>5e-4</td>
+                    <td><strong>5e-4</strong></td>
+                    <td>Same</td>
+                </tr>
+                <tr>
+                    <td>Iterations</td>
+                    <td>3,000</td>
+                    <td><strong>2,000</strong></td>
+                    <td>Fewer images (40 vs 100)</td>
+                </tr>
+            </table>
+
+            <div class="highlight-box">
+                <p><strong>Critical Finding:</strong> The <code>near/far</code> bounds are extremely sensitive for real
+                    data. Through experimentation, I found <code>near=0.001, far=0.5</code> (1mm to 50cm) works well
+                    for my bread scene. Incorrect bounds lead to empty or foggy renderings.</p>
+            </div>
+
+            <h3>Training Results</h3>
+            <div class="gallery gallery-2-col">
+                <div class="gallery-item">
+                    <img src="../project4Output/Part2.6/train_loss_curve.png" alt="Bread Training Loss">
+                    <p>Training Loss: Steady decrease over 2000 iterations</p>
+                </div>
+                <div class="gallery-item">
+                    <img src="../project4Output/Part2.6/train_psnr_curve.png" alt="Bread Training PSNR">
+                    <p>Training PSNR: Achieved good reconstruction quality</p>
+                </div>
+            </div>
+
+            <h4>Training Progression</h4>
+            <div class="gallery gallery-4-col">
+                <div class="gallery-item">
+                    <img src="../project4Output/Part2.6/iter_00500.png" alt="Bread Iter 500">
+                    <p>Iteration 500: Initial structure forming</p>
+                </div>
+                <div class="gallery-item">
+                    <img src="../project4Output/Part2.6/iter_01000.png" alt="Bread Iter 1000">
+                    <p>Iteration 1000: Geometry solidifying</p>
+                </div>
+                <div class="gallery-item">
+                    <img src="../project4Output/Part2.6/iter_01500.png" alt="Bread Iter 1500">
+                    <p>Iteration 1500: Texture details emerging</p>
+                </div>
+                <div class="gallery-item">
+                    <img src="../project4Output/Part2.6/iter_02000.png" alt="Bread Iter 2000">
+                    <p>Iteration 2000: Final quality - clear bread texture and ArUco tag</p>
+                </div>
+            </div>
+
+            <h3>Novel View Synthesis: Circular Trajectory</h3>
+            <p>
+                To generate a 30-frame circular camera trajectory around my bread object at constant height, I compute
+                the trajectory parameters from my training camera positions. I extract the first training camera's
+                position using <code>cam_pos_0 = c2ws_train[0, :3, 3]</code>, then calculate the horizontal radius as
+                <code>R = np.sqrt(cam_pos_0[0]**2 + cam_pos_0[1]**2)</code> and height as
+                <code>z0 = cam_pos_0[2]</code>. For each of 30 angles evenly distributed around a circle using
+                <code>np.linspace(0, 2*np.pi, 30)</code>, I compute the camera position as
+                <code>[R*np.cos(phi), R*np.sin(phi), z0]</code> to maintain constant radius and height while rotating
+                azimuthally.
+            </p>
+
+            <p>
+                To ensure each camera points at the origin (where my bread object sits), I compute the forward direction
+                by normalizing the negative camera position: <code>forward = -cam_pos / np.linalg.norm(cam_pos)</code>.
+                I then construct an orthogonal camera coordinate system by computing the right vector with
+                <code>np.cross([0, 0, -1], forward)</code> and normalizing it, followed by computing the up vector as
+                <code>np.cross(forward, right)</code> to ensure orthogonality. I assemble these into the camera-to-world
+                matrix <code>c2w</code> by placing <code>right</code>, <code>up</code>, and <code>forward</code> in
+                columns 0, 1, and 2 respectively (<code>c2w[:3, :3]</code>), and the camera position in column 3
+                (<code>c2w[:3, 3] = cam_pos</code>). Finally, I render each frame by calling my
+                <code>render_image(model, K, c2w, H, W, device, near=0.001, far=0.5, n_samples=128)</code> function with
+                the bread-specific scene bounds and higher sampling density.
+            </p>
+
+            <div class="gif-container">
+                <img src="../project4Output/Part2.6/bread3d.gif" alt="Bread 3D Novel Views">
+                <p style="text-align: center; font-style: italic; margin-top: 1rem; color: #ccc;"><strong>Final
+                        Result:</strong> 360° Novel View Synthesis of Bread Scene - Smooth rotation with consistent 3D
+                    geometry, visible surface texture, and stable ArUco tag rendering</p>
+            </div>
+
+            <h3>Challenges and Solutions</h3>
+            <table>
+                <tr>
+                    <th>Challenge</th>
+                    <th>Solution</th>
+                    <th>Impact</th>
+                </tr>
+                <tr>
+                    <td>Large dataset size (2 GB)</td>
+                    <td>Downsample to 266×200 with proper intrinsics scaling</td>
+                    <td>4× faster training, 20× smaller files</td>
+                </tr>
+                <tr>
+                    <td>Incorrect depth bounds</td>
+                    <td>Manually tune near/far through visualization</td>
+                    <td>Critical for non-empty renderings</td>
+                </tr>
+                <tr>
+                    <td>Limited training images (40)</td>
+                    <td>Increase model capacity (512 width, L=12 PE)</td>
+                    <td>Better generalization to novel views</td>
+                </tr>
+                <tr>
+                    <td>Calibration imperfections</td>
+                    <td>Higher sample count (128/ray) and smaller batch size</td>
+                    <td>Smoother geometry despite noise</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Summary Section -->
+        <div class="section">
+            <h2>Project Summary and Key Takeaways</h2>
+
+            <h3>Technical Achievements</h3>
+            <ul>
+                <li><strong>Part 0 (Camera Calibration):</strong> Achieved 0.49 pixel RMS reprojection error with
+                    ArUco-based calibration. Successfully estimated poses for 50/50 images with robust handling of
+                    detection failures.</li>
+                <li><strong>Part 1 (2D Neural Fields):</strong> Demonstrated the critical importance of positional
+                    encoding frequency (L). Achieved 26.58 dB (Fox) and 27.89 dB (Messi) PSNR with L=10, W=256
+                    configuration.</li>
+                <li><strong>Part 2 (3D NeRF):</strong> Implemented full volumetric rendering pipeline from scratch.
+                    Trained on Lego dataset achieving >25 dB validation PSNR. Successfully trained on custom real-world
+                    data with proper hyperparameter adaptation.</li>
+            </ul>
+
+            <h3>Implementation Highlights</h3>
+            <ul>
+                <li>Complete ray generation with proper pixel center offset (<code>uv + 0.5</code>)</li>
+                <li>Efficient <code>RaysData</code> dataloader with precomputed rays (10-100× speedup)</li>
+                <li>Stratified sampling with random perturbation to avoid overfitting</li>
+                <li>Skip connections at layer n/2 for deep networks to prevent gradient vanishing</li>
+                <li>Mixed precision training (AMP) for 2× GPU speedup</li>
+                <li>Proper dataset resizing with independent intrinsics scaling per axis</li>
+            </ul>
+
+            <h3>Key Insights</h3>
+            <div class="highlight-box">
+                <p><strong>Positional Encoding is Critical:</strong> Network width cannot compensate for insufficient
+                    frequency coverage. L=2 vs L=10 makes a 4-7 dB PSNR difference regardless of network capacity.</p>
+            </div>
+
+            <div class="highlight-box">
+                <p><strong>Scene Bounds Matter:</strong> For real data, <code>near/far</code> parameters are extremely
+                    sensitive and must be tuned based on actual scene depth. Incorrect bounds result in empty or foggy
+                    renderings.</p>
+            </div>
+
+            <div class="highlight-box">
+                <p><strong>Real vs Synthetic Data:</strong> Real-world scenes require 2-4× more network capacity
+                    (width, encoding levels) and higher sampling density (128 vs 64 samples/ray) compared to clean
+                    synthetic data.</p>
+            </div>
+
+            <h3>What I Learned</h3>
+            <p>
+                This project provided deep insights into neural scene representations and volumetric rendering. The most
+                impactful lesson was understanding how 3D geometry, neural networks, and rendering equations combine to
+                create photorealistic novel views from sparse 2D observations. Implementing the entire pipeline from
+                scratch—from camera calibration with ArUco markers to volume rendering with transmittance
+                calculations—revealed the importance of each component's accuracy. Small errors in camera calibration
+                propagate through the entire system, while improper scene bounds or insufficient network capacity lead
+                to artifacts that no amount of training can fix.
+            </p>
+            <p>
+                The transition from synthetic Lego data to my real-world bread capture highlighted the gap between
+                theory and practice. Real data demands careful preprocessing (image resizing with independent intrinsics
+                scaling), extensive hyperparameter tuning (especially the sensitive <code>near/far</code> bounds), and
+                patience to diagnose failures through visualization rather than metrics alone. I learned that
+                <code>near=0.001, far=0.5</code> for my bread scene was critical—incorrect bounds resulted in completely
+                empty or foggy renderings that no amount of training could recover from.
+            </p>
+            <p>
+                What I really appreciated about this project was learning how to train models using an external GPU.
+                This skill extends far beyond just NeRF—whether it's training large language models, diffusion models,
+                or any computationally intensive deep learning task, knowing how to properly set up remote GPU training,
+                manage CUDA memory, use automatic mixed precision (AMP) for speedup, and monitor training remotely is
+                invaluable. The experience of configuring my training environment to work seamlessly with external
+                hardware, debugging out-of-memory errors, and optimizing batch sizes for maximum GPU utilization taught
+                me practical engineering skills that I can apply to any future machine learning project in my career.
+                This project wasn't just about understanding NeRF theory—it was about developing the infrastructure and
+                debugging skills needed to train real, large-scale models in practice.
+            </p>
+        </div>
+
+    </div>
+</body>
+
+</html>
